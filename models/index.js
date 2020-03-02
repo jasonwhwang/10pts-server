@@ -1,0 +1,6 @@
+require('./Tag')
+require('./User')
+require('./Comment')
+require('./Notification')
+require('./Food')
+require('./Review')

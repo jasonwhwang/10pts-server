@@ -1,0 +1,34 @@
+{
+  "name": "10pts-server",
+  "version": "0.1.0",
+  "description": "10pts API",
+  "author": "Jason Hwang <jasonwhwang@gmail.com>",
+  "private": true,
+  "main": "index.js",
+  "engines": {
+    "node": "12.14.1",
+    "npm": "6.13.4"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jasonwhwang/10pts-server"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "express-jwt": "^5.3.1",
+    "jwks-rsa": "^1.7.0",
+    "mongoose": "^5.9.2",
+    "mongoose-unique-validator": "^2.0.3",
+    "nanoid": "^2.1.11"
+  },
+  "devDependencies": {
+    "dotenv": "^8.2.0",
+    "morgan": "^1.9.1",
+    "nodemon": "^2.0.2"
+  }
+}
