@@ -5,16 +5,18 @@ const User = mongoose.model('User')
 const Review = mongoose.model('Review')
 
 // Get Reviews
-router.get('/account/:username/reviews', auth.optional, async (req, res, next) => {
+router.get('/account/reviews/:username', auth.optional, async (req, res, next) => {
   try {
     let [authUser, account] = await Promise.all([
-      User.findOne({ sub: req.user.sub }), User.findOne({ username: req.params.username })
+      req.user ? User.findOne({ sub: req.user.sub }) : Promise.resolve(),
+      req.params.username ? User.findOne({ username: req.params.username }) : Promise.resolve()
     ])
     if (!account) return res.sendStatus(404)
+    
     let reviews = await Review.find({ account: account._id })
-      .populate('food', 'foodname foodTitle address')
       .populate('account', 'username image')
       .populate('tags', 'name')
+      .lean()
 
     return res.json({
       account: account.getUser(authUser),
@@ -34,18 +36,15 @@ router.get('/account/:username/reviews', auth.optional, async (req, res, next) =
 })
 
 // Get Saved
-router.get('/account/:username/saved', auth.optional, async (req, res, next) => {
+router.get('/account/saved/:username', auth.optional, async (req, res, next) => {
   try {
-    let authUser = req.user ? await User.findOne({ sub: req.user.sub }) : null
-    let account = await User.findOne({ username: req.params.username })
-      .populate({
-        path: 'saved',
-        populate: {
-          path: 'tags',
-          select: 'name'
-        }
-      })
-    if (!account) { return res.sendStatus(404) }
+    let [authUser, account] = await Promise.all([
+      req.user ? User.findOne({ sub: req.user.sub }) : Promise.resolve(),
+      req.params.username ? User.findOne({ username: req.params.username })
+        .populate({ path: 'saved', populate: { path: 'tags', select: 'name' } })
+        : Promise.resolve()
+    ])
+    if (!account) return res.sendStatus(404)
 
     return res.json({
       account: account.getUser(authUser),
@@ -66,28 +65,18 @@ router.get('/account/:username/saved', auth.optional, async (req, res, next) => 
 
 
 // Get Likes
-router.get('/account/:username/likes', auth.optional, async (req, res, next) => {
+router.get('/account/likes/:username', auth.optional, async (req, res, next) => {
   try {
-    let authUser = req.user ? await User.findOne({ sub: req.user.sub }) : null
-    let account = await User.findOne({ username: req.params.username })
-      .populate({
-        path: 'likes',
-        populate: [
-          {
-            path: 'food',
-            select: 'foodname foodTitle address'
-          },
-          {
-            path: 'account',
-            select: 'username image'
-          },
-          {
-            path: 'tags',
-            select: 'name'
-          }
-        ]
-      })
-    if (!account) { return res.sendStatus(404) }
+    let [authUser, account] = await Promise.all([
+      req.user ? User.findOne({ sub: req.user.sub }) : Promise.resolve(),
+      req.params.username ? User.findOne({ username: req.params.username })
+        .populate({
+          path: 'likes',
+          populate: [{ path: 'account', select: 'username image' }, { path: 'tags', select: 'name' }]
+        })
+        : Promise.resolve()
+    ])
+    if (!account) return res.sendStatus(404)
 
     return res.json({
       account: account.getUser(authUser),
@@ -108,12 +97,15 @@ router.get('/account/:username/likes', auth.optional, async (req, res, next) => 
 
 
 // Get Followers
-router.get('/account/:username/followers', auth.optional, async (req, res, next) => {
+router.get('/account/followers/:username', auth.optional, async (req, res, next) => {
   try {
-    let authUser = req.user ? await User.findOne({ sub: req.user.sub }) : null
-    let account = await User.findOne({ username: req.params.username })
-      .populate('followers', 'username image followersCount')
-    if (!account) { return res.sendStatus(404) }
+    let [authUser, account] = await Promise.all([
+      req.user ? User.findOne({ sub: req.user.sub }) : Promise.resolve(),
+      req.params.username ? User.findOne({ username: req.params.username })
+        .populate('followers', 'username image followersCount')
+        : Promise.resolve()
+    ])
+    if (!account) return res.sendStatus(404)
 
     return res.json({
       account: account.getUser(authUser),
@@ -133,12 +125,15 @@ router.get('/account/:username/followers', auth.optional, async (req, res, next)
 
 
 // Get Following
-router.get('/account/:username/following', auth.optional, async (req, res, next) => {
+router.get('/account/following/:username', auth.optional, async (req, res, next) => {
   try {
-    let authUser = req.user ? await User.findOne({ sub: req.user.sub }) : null
-    let account = await User.findOne({ username: req.params.username })
-      .populate('following', 'username image followersCount')
-    if (!account) { return res.sendStatus(404) }
+    let [authUser, account] = await Promise.all([
+      req.user ? User.findOne({ sub: req.user.sub }) : Promise.resolve(),
+      req.params.username ? User.findOne({ username: req.params.username })
+        .populate('following', 'username image followersCount')
+        : Promise.resolve()
+    ])
+    if (!account) return res.sendStatus(404)
 
     return res.json({
       account: account.getUser(authUser),

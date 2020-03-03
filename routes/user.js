@@ -17,6 +17,7 @@ router.get('/private', auth.required, function (req, res) {
 router.get('/user', auth.required, async function (req, res, next) {
   try {
     let user = await User.findOne({ sub: req.user.sub })
+      .select('-email -likes -likedComments -following -notifications -flaggedUsers -flaggedReviews -flaggedCount')
     if (user) return res.json({ user: user.getUser(null) })
     else if (req.user.email_verified === false) return res.sendStatus(401)
     user = new User()
@@ -36,9 +37,10 @@ router.get('/user', auth.required, async function (req, res, next) {
 router.put('/user', auth.required, async (req, res, next) => {
   try {
     let user = await User.findOne({ sub: req.user.sub })
+      .select('-email -saved -likes -likedComments -followers -following -notifications -flaggedUsers -flaggedReviews -flaggedCount')
     if (!user) { return res.sendStatus(401) }
-    let u = req.body.user
 
+    let u = req.body.user
     if (typeof u.username !== 'undefined') user.username = u.username.substring(0, 50)
     if (typeof u.name !== 'undefined') user.name = u.name.substring(0, 50)
     if (typeof u.image !== 'undefined') user.image = u.image.substring(0, 500)
@@ -56,23 +58,16 @@ router.put('/user', auth.required, async (req, res, next) => {
 // Get User Notifications
 router.get('/user/notifications', auth.required, async function (req, res, next) {
   try {
-    let user = await User.findOne({ sub: req.user.sub })
+    let user = await User.findOne({ sub: req.user.sub }, 'notifications')
       .populate({
         path: 'notifications',
         populate: [
-          {
-            path: 'review',
-            populate: {
-              path: 'food',
-              select: 'foodname foodTitle'
-            }
-          },
-          {
-            path: 'from',
-            select: 'username image'
-          }
+          { path: 'review', select: 'foodname foodTitle' },
+          { path: 'from', select: 'username image' },
+          { path: 'to', select: 'username image' }
         ]
       })
+      .lean()
     if (!user) return res.sendStatus(401)
     return res.json({ user: user.notifications })
 

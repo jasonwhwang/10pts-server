@@ -4,6 +4,7 @@ var FoodSchema = new mongoose.Schema({
   foodname: { type: String, lowercase: true, unique: true, required: [true, "can't be blank"], match: [/^[a-zA-Z0-9]+$/, 'is invalid'], index: true },
   foodTitle: { type: String, required: true, index: true },
   address: { type: String, required: true, index: true },
+  
   tags: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Tag', index: true }],
   tagsCount: {},
   photos: [String],
@@ -28,6 +29,12 @@ FoodSchema.methods.getDetails = function() {
     foodTitle: this.foodTitle,
     address: this.address
   }
+}
+
+FoodSchema.methods.setFoodname = function(food) {
+  let titleUrl = food.foodTitle.replace(/[^A-Za-z0-9 ]/gi, '').replace(/\s+/g, '-').toLowerCase()
+  let addressUrl = food.address.replace(/,/g, ' ').replace(/\s+/g, '-').toLowerCase()
+  this.foodname = titleUrl + '-' + addressUrl
 }
 
 mongoose.model('Food', FoodSchema)
