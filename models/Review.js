@@ -113,7 +113,7 @@ ReviewSchema.methods.getDetails = function (r) {
 }
 
 ReviewSchema.methods.deleteComments = function() {
-  this.comments.map(comment => {
+  this.comments.forEach(comment => {
     Comment.findByIdAndDelete(comment)
   })
 }

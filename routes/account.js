@@ -13,9 +13,8 @@ router.get('/account/reviews/:username', auth.optional, async (req, res, next) =
     ])
     if (!account) return res.sendStatus(404)
     
-    let reviews = await Review.find({ account: account._id })
+    let reviews = await Review.find({ account: account._id }, '-tags -comments')
       .populate('account', 'username image')
-      .populate('tags', 'name')
       .lean()
 
     return res.json({
@@ -41,7 +40,7 @@ router.get('/account/saved/:username', auth.optional, async (req, res, next) => 
     let [authUser, account] = await Promise.all([
       req.user ? User.findOne({ sub: req.user.sub }) : Promise.resolve(),
       req.params.username ? User.findOne({ username: req.params.username })
-        .populate({ path: 'saved', populate: { path: 'tags', select: 'name' } })
+        .populate('saved', '-tags')
         : Promise.resolve()
     ])
     if (!account) return res.sendStatus(404)
@@ -71,8 +70,8 @@ router.get('/account/likes/:username', auth.optional, async (req, res, next) => 
       req.user ? User.findOne({ sub: req.user.sub }) : Promise.resolve(),
       req.params.username ? User.findOne({ username: req.params.username })
         .populate({
-          path: 'likes',
-          populate: [{ path: 'account', select: 'username image' }, { path: 'tags', select: 'name' }]
+          path: 'likes', select: '-tags -comments',
+          populate: [{ path: 'account', select: 'username image' }]
         })
         : Promise.resolve()
     ])

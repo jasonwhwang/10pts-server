@@ -3,8 +3,35 @@ const auth = require('./auth')
 const mongoose = require('mongoose')
 const User = mongoose.model('User')
 const Food = mongoose.model('Food')
-const Tag = mongoose.model('Tag')
 const Review = mongoose.model('Review')
+
+// GET - Get Review
+router.get('/review/:foodname', auth.optional, async (req, res, next) => {
+  try {
+    let authUser = await User.findOne({ sub: req.user.sub })
+    let review = await Review.findOne({ foodname: req.params.foodname })
+      .populate('account', 'username image')
+      .populate('tags', 'name')
+      .populate('comments')
+    return res.json({
+      isFollowing: authUser.isFollowing(review.account),
+      review: {
+        ...review,
+        isLiked: authUser.isLiked(review._id),
+        isSaved: authUser.isSaved(review.food._id)
+      },
+      comments: review.comments.map(comment => {
+        return {
+          ...comment,
+          isLiked: authUser.isLikedComment(comment._id)
+        }
+      })
+    })
+  } catch (err) {
+    console.log(err)
+    next(err)
+  }
+})
 
 // POST - New Review
 router.post('/review', auth.required, async (req, res, next) => {
@@ -46,15 +73,15 @@ router.post('/review', auth.required, async (req, res, next) => {
 
 
 // PUT - Update Review
-router.post('/review', auth.required, async (req, res, next) => {
+router.post('/review/:foodname', auth.required, async (req, res, next) => {
   try {
     let user = await User.findOne({ sub: req.user.sub })
     if (!user || !req.body.review) return res.sendStatus(401)
 
     let r = req.body.review
-    let review = await Review.findById(r._id)
+    let review = await Review.findOne({ foodname: req.params.foodname })
       .select('-comments -likesCount -flaggedCount')
-    if (!review) throw new Error('Review does not exist.')
+    if (!review) return res.sendStatus(404)
     if (!r.foodTitle || !r.address || !r.photos || !r.tags
       || !r.review || !r.price || !r.pts) throw new Error('Missing values.')
 
@@ -96,15 +123,15 @@ router.post('/review', auth.required, async (req, res, next) => {
 
 
 // DELETE - Delete Review
-router.delete('/review', auth.required, async (req, res, next) => {
+router.delete('/review/:foodname', auth.required, async (req, res, next) => {
   try {
     let user = await User.findOne({ sub: req.user.sub })
     if (!user || !req.body.review) return res.sendStatus(401)
 
     let r = req.body.review
-    let review = await Review.findById(r._id)
+    let review = await Review.findOne({ foodname: req.params.foodname })
       .select('-comments -likesCount -flaggedCount')
-    if (!review) throw new Error('Review does not exist.')
+    if (!review) return res.sendStatus(404)
 
     await Promise.all([review.setTags([]), review.deleteComments()])
 
