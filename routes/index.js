@@ -4,9 +4,9 @@ router.use('/', require('./user'))
 router.use('/', require('./account'))
 router.use('/', require('./tag'))
 router.use('/', require('./comment'))
-// router.use('/', require('./review'))
+router.use('/', require('./review'))
 
-// Error Handler
+// ERR - Validation Error Handler
 router.use(function (err, req, res, next) {
   if (err.name === 'ValidationError') {
     return res.status(422).json({

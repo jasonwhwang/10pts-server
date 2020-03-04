@@ -9,7 +9,7 @@ router.get('/private', auth.required, function (req, res) {
   return res.json({ message: 'Private Endpoint: Welcome to 10pts' })
 })
 
-// Create User
+// GET/Create - User
 // when using auth.required, req.user returns user values:
 // 1. req.user.sub - string
 // 2. req.user.email - string
@@ -17,7 +17,7 @@ router.get('/private', auth.required, function (req, res) {
 router.get('/user', auth.required, async function (req, res, next) {
   try {
     let user = await User.findOne({ sub: req.user.sub })
-      .select('-email -likes -likedComments -following -notifications -flaggedUsers -flaggedReviews -flaggedCount')
+      .select('username name image bio reviewsCount saved followersCount following flaggedUsers')
     if (user) return res.json({ user: user.getUser(null) })
     else if (req.user.email_verified === false) return res.sendStatus(401)
     user = new User()
@@ -33,11 +33,11 @@ router.get('/user', auth.required, async function (req, res, next) {
   }
 })
 
-// Update User
+// PUT/Update - User
 router.put('/user', auth.required, async (req, res, next) => {
   try {
     let user = await User.findOne({ sub: req.user.sub })
-      .select('-email -saved -likes -likedComments -followers -following -notifications -flaggedUsers -flaggedReviews -flaggedCount')
+      .select('username name image bio')
     if (!user) { return res.sendStatus(401) }
 
     let u = req.body.user
@@ -55,7 +55,7 @@ router.put('/user', auth.required, async (req, res, next) => {
   }
 })
 
-// Get User Notifications
+// GET - Notifications
 router.get('/user/notifications', auth.required, async function (req, res, next) {
   try {
     let user = await User.findOne({ sub: req.user.sub }, 'notifications')

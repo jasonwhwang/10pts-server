@@ -4,7 +4,7 @@ const mongoose = require('mongoose')
 const User = mongoose.model('User')
 const Review = mongoose.model('Review')
 
-// Get Reviews
+// GET - Reviews
 router.get('/account/reviews/:username', auth.optional, async (req, res, next) => {
   try {
     let [authUser, account] = await Promise.all([
@@ -35,7 +35,7 @@ router.get('/account/reviews/:username', auth.optional, async (req, res, next) =
   }
 })
 
-// Get Saved
+// GET - Saved
 router.get('/account/saved/:username', auth.optional, async (req, res, next) => {
   try {
     let [authUser, account] = await Promise.all([
@@ -64,7 +64,7 @@ router.get('/account/saved/:username', auth.optional, async (req, res, next) => 
 })
 
 
-// Get Likes
+// GET - Likes
 router.get('/account/likes/:username', auth.optional, async (req, res, next) => {
   try {
     let [authUser, account] = await Promise.all([
@@ -96,7 +96,7 @@ router.get('/account/likes/:username', auth.optional, async (req, res, next) => 
 })
 
 
-// Get Followers
+// GET - Followers
 router.get('/account/followers/:username', auth.optional, async (req, res, next) => {
   try {
     let [authUser, account] = await Promise.all([
@@ -124,7 +124,7 @@ router.get('/account/followers/:username', auth.optional, async (req, res, next)
 })
 
 
-// Get Following
+// GET - Following
 router.get('/account/following/:username', auth.optional, async (req, res, next) => {
   try {
     let [authUser, account] = await Promise.all([
@@ -152,7 +152,7 @@ router.get('/account/following/:username', auth.optional, async (req, res, next)
 })
 
 
-// Search Accounts
+// GET - Accounts Search Query
 router.get('/accounts', auth.optional, async (req, res, next) => {
   try {
     let query = {}, options = { reviewsCount: -1, followersCount: -1 }

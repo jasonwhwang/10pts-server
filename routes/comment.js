@@ -5,14 +5,14 @@ const User = mongoose.model('User')
 const Comment = mongoose.model('Comment')
 const Review = mongoose.model('Review')
 
-// Post Comment
+// POST - Comment
 router.post('/comment', auth.required, async (req, res, next) => {
   try {
     let [user, review] = await Promise.all([
       User.findOne({ sub: req.user.sub }, '_id'),
       Review.findById(req.body.comment.review, 'comments')
     ])
-    if (!user || !review) { return res.sendStatus(401) }
+    if (!user || !review || !req.body.comment) { return res.sendStatus(401) }
 
     let comment = new Comment()
     comment.body = req.body.comment.body
@@ -29,7 +29,7 @@ router.post('/comment', auth.required, async (req, res, next) => {
   }
 })
 
-// Delete Comment
+// DELETE - Comment
 router.delete('/comment', auth.required, async (req, res, next) => {
   try {
     let [user, comment] = await Promise.all([
@@ -55,7 +55,7 @@ router.delete('/comment', auth.required, async (req, res, next) => {
   }
 })
 
-// Like Comment
+// PUT - Like Comment
 router.put('/comment/like', auth.required, async (req, res, next) => {
   try {
     let [user, comment] = await Promise.all([
@@ -72,7 +72,7 @@ router.put('/comment/like', auth.required, async (req, res, next) => {
   }
 })
 
-// Delete Comment
+// PUT - Unlike Comment
 router.put('/comment/unlike', auth.required, async (req, res, next) => {
   try {
     let [user, comment] = await Promise.all([

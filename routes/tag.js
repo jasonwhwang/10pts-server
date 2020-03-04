@@ -3,6 +3,7 @@ const auth = require('./auth')
 const mongoose = require('mongoose')
 const Tag = mongoose.model('Tag')
 
+// GET - Tags
 router.get('/tags', auth.optional, async (req, res, next) => {
   try {
     let tags = await Tag.find({}).lean()
