@@ -48,21 +48,21 @@ UserSchema.methods.getUser = function (authUser) {
 }
 
 // Saved Functions
-UserSchema.methods.save = async function (food) {
+UserSchema.methods.saveFood = async function (food) {
   if (this.saved.indexOf(food._id) === -1) {
     this.saved.push(food._id)
     food.savedCount = food.savedCount + 1
     await Promise.all([this.save(), food.save()])
   }
 }
-UserSchema.methods.unsave = async function (food) {
+UserSchema.methods.unsaveFood = async function (food) {
   if (this.saved.indexOf(food._id) !== -1) {
     this.saved.remove(food._id)
     food.savedCount = food.savedCount - 1
     await Promise.all([this.save(), food.save()])
   }
 }
-UserSchema.methods.isSaved = function (id) {
+UserSchema.methods.isSavedFood = function (id) {
   return this.saved.some(function (savedId) {
     return savedId.toString() === id.toString()
   })

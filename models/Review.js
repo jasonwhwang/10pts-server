@@ -28,10 +28,41 @@ var ReviewSchema = new mongoose.Schema({
   flaggedCount: { type: Number, default: 0 },
 }, { timestamps: true })
 
+ReviewSchema.methods.getReview = function(authUser) {
+  return {
+    ...this,
+    isLiked: authUser ? authUser.isLiked(this._id) : false,
+    isSaved: authUser ? authUser.isSaved(this.food._id) : false,
+    isFlagged: authUser ? authUser.isFlaggedReview(this._id) : false,
+    account: {
+      ...this.account,
+      isFollowing: authUser ? authUser.isFollowing(this.account._id) : false
+    },
+    comments: this.comments.map(comment => {
+      return {
+        ...comment,
+        isLiked: authUser.isLikedComment(comment._id)
+      }
+    })
+  }
+}
+
+ReviewSchema.methods.getReviewBasic = function(authUser) {
+  return {
+    ...this,
+    isLiked: authUser ? authUser.isLiked(this._id) : false,
+    isSaved: authUser ? authUser.isSaved(this.food._id) : false,
+    account: {
+      ...this.account,
+      isFollowing: authUser ? authUser.isFollowing(this.account._id) : false
+    }
+  }
+}
+
 ReviewSchema.methods.setTags = async function (newTags) {
   try {
     let newTagsId = await Promise.all(newTags.map(tag => { return tag._id }))
-    let oldTagsId = await Promise.all(this.tags.map(tag => { return tag.toHexString() }))
+    let oldTagsId = await Promise.all(this.tags.map(tag => { return tag.toString() }))
 
     let returnTags = []
     for (let i = 0; i < newTagsId.length; i++) {

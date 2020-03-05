@@ -5,6 +5,7 @@ router.use('/', require('./account'))
 router.use('/', require('./tag'))
 router.use('/', require('./comment'))
 router.use('/', require('./review'))
+router.use('/', require('./food'))
 
 // ERR - Validation Error Handler
 router.use(function (err, req, res, next) {

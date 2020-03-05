@@ -20,10 +20,24 @@ var FoodSchema = new mongoose.Schema({
   ptsBalance: { type: Number, default: 0, required: true },
 
   savedCount: { type: Number, default: 0 },
-  reviews: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Review' }]
+  reviews: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Review' }],
+  accounts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
 }, { timestamps: true })
 
 FoodSchema.index({ foodTitle: 'text', address: 'text' })
+
+FoodSchema.methods.getFood = function (authUser) {
+  let hasReviewed = this.accounts.some(function (accountId) {
+    return accountId.toString() === authUser._id.toString()
+  })
+
+  return {
+    ...this,
+    isSaved: authUser.isSaved(this._id),
+    isReviewed: hasReviewed,
+    reviewsCount: this.reviews.length
+  }
+}
 
 FoodSchema.methods.setFood = function (foodTitle, address) {
   let a = address.split(',')[0]
@@ -42,7 +56,11 @@ FoodSchema.methods.setDetails = function (newReview, oldReview) {
   this.setTags(newReview.tags, oldTags)
   this.photos[newReview.account] = newReview.photos
 
-  if (this.reviews.includes(newReview._id) && oldReview) {
+  let hasReview = this.reviews.some(function (reviewId) {
+    return reviewId.toString() === newReview._id.toString()
+  })
+
+  if (hasReview && oldReview) {
     this.price = updateAverage(this.price, this.reviews.length, oldReview.price, newReview.price)
     this.pts = updateAverage(this.pts, this.reviews.length, oldReview.pts, newReview.pts)
     this.ptsTaste = updateAverage(this.ptsTaste, this.reviews.length, oldReview.ptsTaste, newReview.ptsTaste)
@@ -51,6 +69,8 @@ FoodSchema.methods.setDetails = function (newReview, oldReview) {
     this.ptsAroma = updateAverage(this.ptsAroma, this.reviews.length, oldReview.ptsAroma, newReview.ptsAroma)
     this.ptsBalance = updateAverage(this.ptsBalance, this.reviews.length, oldReview.ptsBalance, newReview.ptsBalance)
   } else {
+    this.reviews.push(newReview._id)
+    this.accounts.push(newReview.account)
     this.price = addToAverage(this.price, this.reviews.length, newReview.price)
     this.pts = addToAverage(this.pts, this.reviews.length, newReview.pts)
     this.ptsTaste = addToAverage(this.ptsTaste, this.reviews.length, newReview.ptsTaste)
@@ -59,8 +79,6 @@ FoodSchema.methods.setDetails = function (newReview, oldReview) {
     this.ptsAroma = addToAverage(this.ptsAroma, this.reviews.length, newReview.ptsAroma)
     this.ptsBalance = addToAverage(this.ptsBalance, this.reviews.length, newReview.ptsBalance)
   }
-
-  this.reviews.push(review_id)
 }
 
 FoodSchema.methods.setTags = function (newTags, oldTags) {
@@ -101,7 +119,8 @@ FoodSchema.methods.removeReview = function (review) {
     this.ptsBalance = removeFromAverage(this.ptsBalance, this.reviews.length, newReview.ptsBalance)
   }
 
-  this.reviews.remove(review_id)
+  this.reviews.remove(review._id)
+  this.accounts.remove(review.account._id)
 }
 
 mongoose.model('Food', FoodSchema)
