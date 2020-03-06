@@ -5,7 +5,7 @@ const User = mongoose.model('User')
 const generate = require('nanoid/generate')
 
 router.get('/private', auth.required, function (req, res) {
-  console.log(req.user)
+  // console.log(req.user)
   return res.json({ message: 'Private Endpoint: Welcome to 10pts' })
 })
 
@@ -23,7 +23,11 @@ router.get('/user', auth.required, async function (req, res, next) {
     user = new User()
     user.sub = req.user.sub
     user.email = req.user.email
-    user.username = req.user.email.split("@")[0] + "-" + generate('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', 7)
+    user.username = req.user.email.split("@")[0]
+
+    let testUser = await User.findOne({ username: user.username }, '_id').lean()
+    if(testUser) user.username = user.username + generate('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', 7)
+    
     await user.save()
     return res.json({ user: user.getUser(null) })
 

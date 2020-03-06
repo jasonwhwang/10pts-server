@@ -28,6 +28,8 @@ var ReviewSchema = new mongoose.Schema({
   flaggedCount: { type: Number, default: 0 },
 }, { timestamps: true })
 
+ReviewSchema.index({ account: 1, foodTitle: 1, address: 1 }, { unique: true })
+
 ReviewSchema.methods.getReview = function(authUser) {
   return {
     ...this,

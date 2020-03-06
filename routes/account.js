@@ -175,7 +175,7 @@ router.put('/accounts/follow/:username', auth.required, async (req, res, next) =
   try {
     let [user, account] = await Promise.all([
       User.findOne({ sub: req.user.sub }),
-      User.findOne({ sub: req.params.username })
+      User.findOne({ username: req.params.username })
     ])
     await user.follow(account)
     await createNotification('follow', null, user._id, account._id)
@@ -192,7 +192,7 @@ router.put('/accounts/unfollow/:username', auth.required, async (req, res, next)
   try {
     let [user, account] = await Promise.all([
       User.findOne({ sub: req.user.sub }),
-      User.findOne({ sub: req.params.username })
+      User.findOne({ username: req.params.username })
     ])
     await user.unfollow(account)
     return res.json({ isFollowing: user.isFollowing(account._id), followersCount: account.followersCount })

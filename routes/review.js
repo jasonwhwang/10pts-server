@@ -73,14 +73,14 @@ router.post('/review', auth.required, async (req, res, next) => {
 
 
 // PUT - Update Review
-router.post('/review/:foodname', auth.required, async (req, res, next) => {
+router.post('/review/:reviewId', auth.required, async (req, res, next) => {
   try {
     let user = await User.findOne({ sub: req.user.sub })
     if (!user || !req.body.review
-      || req.body.review.foodname !== req.params.foodname) return res.sendStatus(401)
+      || req.body.review._id !== req.params.reviewId) return res.sendStatus(401)
 
     let r = req.body.review
-    let review = await Review.findOne({ account: user._id, foodname: req.params.foodname })
+    let review = await Review.findById(req.params.reviewId)
       .select('-comments -likesCount -flaggedCount')
     if (!review) return res.sendStatus(404)
     if (!r.foodTitle || !r.address || !r.photos || !r.tags
@@ -124,13 +124,13 @@ router.post('/review/:foodname', auth.required, async (req, res, next) => {
 
 
 // DELETE - Delete Review
-router.delete('/review/:foodname', auth.required, async (req, res, next) => {
+router.delete('/review/:reviewId', auth.required, async (req, res, next) => {
   try {
     let user = await User.findOne({ sub: req.user.sub })
     if (!user || !req.body.review
-      || req.body.review.foodname !== req.params.foodname) return res.sendStatus(401)
+      || req.body.review._id !== req.params.reviewId) return res.sendStatus(401)
 
-    let review = await Review.findOne({ account: user._id, foodname: req.params.foodname })
+    let review = await Review.findById(req.params.reviewId)
     if (!review) return res.sendStatus(404)
 
     await Promise.all([review.setTags([]), review.deleteComments()])

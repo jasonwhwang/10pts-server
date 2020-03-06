@@ -25,6 +25,7 @@ var FoodSchema = new mongoose.Schema({
 }, { timestamps: true })
 
 FoodSchema.index({ foodTitle: 'text', address: 'text' })
+FoodSchema.index({ foodTitle: 1, address: 1 }, { unique: true })
 
 FoodSchema.methods.getFood = function (authUser) {
   let hasReviewed = this.accounts.some(function (accountId) {

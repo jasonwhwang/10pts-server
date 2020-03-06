@@ -3,7 +3,7 @@ var uniqueValidator = require('mongoose-unique-validator')
 
 var UserSchema = new mongoose.Schema({
   sub: { type: String, unique: true, index: true, required: true },
-  username: { type: String, lowercase: true, unique: true, required: [true, "can't be blank"], match: [/^[a-zA-Z0-9]+$/, 'is invalid'], index: true },
+  username: { type: String, unique: true, required: [true, "can't be blank"], match: [/^[a-zA-Z0-9]+$/, 'is invalid'], index: true },
   email: { type: String, unique: true, index: true, required: true },
   name: { type: String, default: '', index: true },
   image: { type: String, default: '' },
@@ -76,7 +76,7 @@ UserSchema.methods.like = async function (review) {
     await Promise.all([this.save(), review.save()])
   }
 }
-UserSchema.methods.unlike = function (review) {
+UserSchema.methods.unlike = async function (review) {
   if (this.likes.indexOf(review._id) !== -1) {
     this.likes.remove(review._id)
     review.likesCount = review.likesCount - 1
@@ -97,7 +97,7 @@ UserSchema.methods.likeComment = async function (comment) {
     await Promise.all([this.save(), comment.save()])
   }
 }
-UserSchema.methods.unlikeComment = function (comment) {
+UserSchema.methods.unlikeComment = async function (comment) {
   if (this.likedComments.indexOf(comment._id) !== -1) {
     this.likedComments.remove(comment._id)
     comment.likesCount = comment.likesCount - 1

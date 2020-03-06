@@ -1,8 +1,9 @@
 const express = require('express')
 const mongoose = require('mongoose')
 const cors = require('cors')
+// comment this out for production
+require('dotenv').config()
 const morgan = process.env.APP_ENV === 'dev' ? require('morgan') : null
-if (process.env.APP_ENV === 'dev') require('dotenv').config()
 
 mongoose.connect(process.env.M_URI, {
   useNewUrlParser: true,
@@ -29,11 +30,7 @@ app.use(function (req, res, next) {
 })
 app.use(function (err, req, res, next) {
   res.status(err.status || 500)
-  res.json({
-    errors: [{
-      error: err.message
-    }]
-  })
+  res.json({ error: err.message })
 })
 
 const port = process.env.PORT || 5000

@@ -33,11 +33,11 @@ router.post('/comment', auth.required, async (req, res, next) => {
 })
 
 // DELETE - Comment
-router.delete('/comment', auth.required, async (req, res, next) => {
+router.delete('/comment/:commentId', auth.required, async (req, res, next) => {
   try {
     let [user, comment] = await Promise.all([
       User.findOne({ sub: req.user.sub }, '_id'),
-      Comment.findById(req.body.comment._id, 'account review')
+      Comment.findById(req.params.commentId, 'account review')
     ])
     if (!user || !comment) return res.sendStatus(401)
 
@@ -59,11 +59,11 @@ router.delete('/comment', auth.required, async (req, res, next) => {
 })
 
 // PUT - Like Comment
-router.put('/comment/like', auth.required, async (req, res, next) => {
+router.put('/comment/like/:commentId', auth.required, async (req, res, next) => {
   try {
     let [user, comment] = await Promise.all([
       User.findOne({ sub: req.user.sub }, '_id'),
-      Comment.findById(req.body.comment._id, 'likesCount')
+      Comment.findById(req.params.commentId, 'likesCount')
     ])
     if (!user || !comment) return res.sendStatus(401)
     await user.likeComment(comment)
@@ -76,11 +76,11 @@ router.put('/comment/like', auth.required, async (req, res, next) => {
 })
 
 // PUT - Unlike Comment
-router.put('/comment/unlike', auth.required, async (req, res, next) => {
+router.put('/comment/unlike/:commentId', auth.required, async (req, res, next) => {
   try {
     let [user, comment] = await Promise.all([
       User.findOne({ sub: req.user.sub }, '_id'),
-      Comment.findById(req.body.comment._id, 'likesCount')
+      Comment.findById(req.params.commentId, 'likesCount')
     ])
     if (!user || !comment) return res.sendStatus(401)
     await user.unlikeComment(comment)
