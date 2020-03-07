@@ -43,7 +43,7 @@ UserSchema.methods.getUser = function (authUser) {
     followersCount: this.followersCount,
 
     isFollowing: authUser ? authUser.isFollowing(this._id) : false,
-    isFlagged: authUser ? authUser.isFlagged(this._id) : false
+    isFlagged: authUser ? authUser.isFlaggedUser(this._id) : false
   }
 }
 

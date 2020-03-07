@@ -2,7 +2,7 @@ const mongoose = require('mongoose')
 const User = mongoose.model('User')
 const Notification = mongoose.model('Notification')
 
-export const createNotification = (type, review, from, to) => {
+const create = async (type, review, from, to) => {
   let account = await User.findById(to)
   if (!account) throw new Error('Missing values.')
 
@@ -21,4 +21,8 @@ export const createNotification = (type, review, from, to) => {
     await Notification.findByIdAndDelete(deleteN)
   }
   await account.save()
+}
+
+module.exports = {
+  create
 }

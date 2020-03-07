@@ -1,7 +1,7 @@
 const router = require('express').Router()
 
 router.use('/', require('./user'))
-// router.use('/', require('./account'))
+router.use('/', require('./account'))
 // router.use('/', require('./tag'))
 // router.use('/', require('./comment'))
 // router.use('/', require('./review'))

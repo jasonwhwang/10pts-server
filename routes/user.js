@@ -73,7 +73,7 @@ router.get('/user/notifications', auth.required, async function (req, res, next)
       })
       .lean()
     if (!user) return res.sendStatus(401)
-    return res.json({ user: user.notifications })
+    return res.json({ data: user.notifications })
 
   } catch (err) {
     console.log(err)

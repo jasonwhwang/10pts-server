@@ -4,7 +4,7 @@ const mongoose = require('mongoose')
 const User = mongoose.model('User')
 const Comment = mongoose.model('Comment')
 const Review = mongoose.model('Review')
-import { createNotification } from './notification'
+const Notification = require('./notification')
 
 // POST - Comment
 router.post('/comment', auth.required, async (req, res, next) => {
@@ -12,6 +12,10 @@ router.post('/comment', auth.required, async (req, res, next) => {
     let [user, review] = await Promise.all([
       User.findOne({ sub: req.user.sub }, '_id'),
       Review.findById(req.body.comment.review, 'comments account')
+        .populate({
+          path: 'comments',
+          populate: [{ path: 'account', select: 'username image' }]
+        })
     ])
     if (!user || !review || !req.body.comment) return res.sendStatus(401)
 
@@ -21,10 +25,17 @@ router.post('/comment', auth.required, async (req, res, next) => {
     comment.review = review._id
     review.comments.push(comment._id)
 
-    await createNotification('comment', review._id, user._id, review.account)
+    await Notification.create('comment', review._id, user._id, review.account)
 
     await Promise.all([comment.save(), review.save()])
-    return res.json({ comment: comment })
+    return res.json({
+      comments: review.comments.map(comment => {
+        return {
+          ...comment,
+          isLiked: user.isLikedComment(comment._id)
+        }
+      })
+    })
 
   } catch (err) {
     console.log(err)
@@ -41,16 +52,25 @@ router.delete('/comment/:commentId', auth.required, async (req, res, next) => {
     ])
     if (!user || !comment) return res.sendStatus(401)
 
-    if (user._id.toString() === comment.account.toString()) {
-      let review = await Review.findById(comment.review, 'comments')
-      if (review) {
-        review.comments.remove(comment._id)
-        review.save()
-      }
-
-      await comment.remove()
-      return res.sendStatus(204)
-    } else return res.sendStatus(403)
+    if (user._id.toString() !== comment.account.toString()) return res.sendStatus(403)
+    let review = await Review.findById(comment.review, 'comments')
+      .populate({
+        path: 'comments',
+        populate: [{ path: 'account', select: 'username image' }]
+      })
+    if (review) {
+      review.comments.remove(comment._id)
+      review.save()
+    }
+    await comment.remove()
+    return res.json({
+      comments: review.comments.map(comment => {
+        return {
+          ...comment,
+          isLiked: user.isLikedComment(comment._id)
+        }
+      })
+    })
 
   } catch (err) {
     console.log(err)

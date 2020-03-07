@@ -3,7 +3,7 @@ const auth = require('./auth')
 const mongoose = require('mongoose')
 const User = mongoose.model('User')
 const Review = mongoose.model('Review')
-import { createNotification } from './notification'
+const Notification = require('./notification')
 
 // GET - Account Reviews
 router.get('/account/reviews/:username', auth.optional, async (req, res, next) => {
@@ -19,7 +19,7 @@ router.get('/account/reviews/:username', auth.optional, async (req, res, next) =
 
     return res.json({
       account: account.getUser(user),
-      reviews: reviews.map(review => {
+      data: reviews.map(review => {
         return review.getReviewBasic(user)
       })
     })
@@ -43,7 +43,7 @@ router.get('/account/saved/:username', auth.optional, async (req, res, next) => 
 
     return res.json({
       account: account.getUser(user),
-      saved: account.saved.map(food => {
+      data: account.saved.map(food => {
         return food.getFood(user)
       })
     })
@@ -71,7 +71,7 @@ router.get('/account/likes/:username', auth.optional, async (req, res, next) => 
 
     return res.json({
       account: account.getUser(user),
-      likes: account.likes.map(review => {
+      data: account.likes.map(review => {
         return review.getReviewBasic(user)
       })
     })
@@ -96,7 +96,7 @@ router.get('/account/followers/:username', auth.optional, async (req, res, next)
 
     return res.json({
       account: account.getUser(user),
-      followers: account.followers.map(account => {
+      data: account.followers.map(account => {
         return {
           ...account,
           isFollowing: user.isFollowing(account._id)
@@ -124,7 +124,7 @@ router.get('/account/following/:username', auth.optional, async (req, res, next)
 
     return res.json({
       account: account.getUser(user),
-      followers: account.following.map(account => {
+      data: account.following.map(account => {
         return {
           ...account,
           isFollowing: user.isFollowing(account._id)
@@ -158,7 +158,7 @@ router.get('/accounts', auth.optional, async (req, res, next) => {
       .sort(options)
 
     return res.json({
-      accounts: accounts.map(function (account) {
+      data: accounts.map(function (account) {
         return account.getUser(user)
       })
     })
@@ -171,14 +171,14 @@ router.get('/accounts', auth.optional, async (req, res, next) => {
 
 
 // PUT - Follow
-router.put('/accounts/follow/:username', auth.required, async (req, res, next) => {
+router.put('/account/follow/:username', auth.required, async (req, res, next) => {
   try {
     let [user, account] = await Promise.all([
       User.findOne({ sub: req.user.sub }),
       User.findOne({ username: req.params.username })
     ])
     await user.follow(account)
-    await createNotification('follow', null, user._id, account._id)
+    await Notification.create('follow', null, user._id, account._id)
     return res.json({ isFollowing: user.isFollowing(account._id), followersCount: account.followersCount })
 
   } catch (err) {
@@ -188,7 +188,7 @@ router.put('/accounts/follow/:username', auth.required, async (req, res, next) =
 })
 
 // PUT - Unfollow
-router.put('/accounts/unfollow/:username', auth.required, async (req, res, next) => {
+router.put('/account/unfollow/:username', auth.required, async (req, res, next) => {
   try {
     let [user, account] = await Promise.all([
       User.findOne({ sub: req.user.sub }),

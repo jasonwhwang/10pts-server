@@ -29,6 +29,7 @@ var ReviewSchema = new mongoose.Schema({
 }, { timestamps: true })
 
 ReviewSchema.index({ account: 1, foodTitle: 1, address: 1 }, { unique: true })
+ReviewSchema.index({ account: 1, foodname: 1 }, { unique: true })
 
 ReviewSchema.methods.getReview = function(authUser) {
   return {

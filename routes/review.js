@@ -4,19 +4,22 @@ const mongoose = require('mongoose')
 const User = mongoose.model('User')
 const Food = mongoose.model('Food')
 const Review = mongoose.model('Review')
-import { createNotification } from './notification'
+const Notification = require('./notification')
 
 // GET - Get Review
-router.get('/review/:foodname', auth.optional, async (req, res, next) => {
+router.get('/review/:foodname/:username', auth.optional, async (req, res, next) => {
   try {
-    let [user, review] = await Promise.all([
+    let [user, account] = await Promise.all([
       User.findOne({ sub: req.user.sub }),
-      Review.findOne({ foodname: req.params.foodname })
-        .populate('account', 'username image')
-        .populate('tags', 'name')
-        .populate('comments')
+      User.findOne({ username: req.params.username })
     ])
-    if(!user || !review) return res.sendStatus(401)
+    if (!account) return res.sendStatus(401)
+    
+    let review = await Review.findOne({ account: account._id, foodname: req.params.foodname })
+      .populate('account', 'username image')
+      .populate('tags', 'name')
+      .populate('comments')
+    if (!review) return res.sendStatus(401)
     return res.json({ review: review.getReview(user) })
 
   } catch (err) {
@@ -60,7 +63,7 @@ router.post('/review', auth.required, async (req, res, next) => {
 
     // Create notifications
     user.followers.forEach(async followerId => {
-      await createNotification('review', review._id, user._id, followerId)
+      await Notification.create('review', review._id, user._id, followerId)
     })
 
     return
@@ -73,7 +76,7 @@ router.post('/review', auth.required, async (req, res, next) => {
 
 
 // PUT - Update Review
-router.post('/review/:reviewId', auth.required, async (req, res, next) => {
+router.put('/review/:reviewId', auth.required, async (req, res, next) => {
   try {
     let user = await User.findOne({ sub: req.user.sub })
     if (!user || !req.body.review
