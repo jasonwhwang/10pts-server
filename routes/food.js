@@ -44,7 +44,7 @@ router.get('/food', auth.optional, async (req, res, next) => {
     if (q.minPts) minPts = { $gte: q.minPts }
     if (q.maxPts) maxPts = { $lte: q.maxPts }
     if (q.minPrice) minPrice = { $gte: q.minPrice }
-    if (q.maxPrice) maxPrice = { $lte: q.maxPrice }
+    if (q.maxPrice && q.maxPrice < 100) maxPrice = { $lte: q.maxPrice }
     query.pts = { ...minPts, ...maxPts }
     query.price = { ...minPrice, ...maxPrice }
 
@@ -58,7 +58,7 @@ router.get('/food', auth.optional, async (req, res, next) => {
       .sort(options)
 
     return res.json({
-      food: allFood.map(function (food) {
+      data: allFood.map(function (food) {
         return food.getFood(user)
       })
     })

@@ -1,8 +1,7 @@
 const express = require('express')
 const mongoose = require('mongoose')
 const cors = require('cors')
-// comment this out for production
-require('dotenv').config()
+require('dotenv').config() //comment out in production
 const morgan = process.env.APP_ENV === 'dev' ? require('morgan') : null
 
 mongoose.connect(process.env.M_URI, {

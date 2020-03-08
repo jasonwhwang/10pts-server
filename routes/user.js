@@ -23,10 +23,10 @@ router.get('/user', auth.required, async function (req, res, next) {
     user = new User()
     user.sub = req.user.sub
     user.email = req.user.email
-    user.username = req.user.email.split("@")[0]
+    user.username = req.user.email.split("@")[0].toLowerCase().replace(/[^a-z0-9]/gi, '')
 
     let testUser = await User.findOne({ username: user.username }, '_id').lean()
-    if(testUser) user.username = user.username + generate('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', 7)
+    if(testUser) user.username = user.username + generate('0123456789abcdefghijklmnopqrstuvwxyz', 10)
     
     await user.save()
     return res.json({ user: user.getUser(null) })
@@ -41,11 +41,11 @@ router.get('/user', auth.required, async function (req, res, next) {
 router.put('/user', auth.required, async (req, res, next) => {
   try {
     let user = await User.findOne({ sub: req.user.sub })
-      .select('username name image bio')
+      .select('username name image bio saved followers following flaggedUsers')
     if (!user) { return res.sendStatus(401) }
 
     let u = req.body.user
-    if (typeof u.username !== 'undefined') user.username = u.username.substring(0, 50)
+    if (typeof u.username !== 'undefined') user.username = u.username.substring(0, 50).toLowerCase().replace(/[^a-z0-9]/gi, '')
     if (typeof u.name !== 'undefined') user.name = u.name.substring(0, 50)
     if (typeof u.image !== 'undefined') user.image = u.image.substring(0, 500)
     if (typeof u.bio !== 'undefined') user.bio = u.bio.substring(0, 500)

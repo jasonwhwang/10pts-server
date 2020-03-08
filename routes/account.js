@@ -142,10 +142,11 @@ router.get('/account/following/:username', auth.optional, async (req, res, next)
 // GET - Accounts Search Query
 router.get('/accounts', auth.optional, async (req, res, next) => {
   try {
-    let query = {}, options = { reviewsCount: -1, followersCount: -1 }
+    let query = {}, options = {}, sortOptions = { reviewsCount: -1, followersCount: -1 }
     if (req.query.keywords) {
       query = { $text: { $search: req.query.keywords } }
       options = { score: { $meta: "textScore" } }
+      sortOptions = { ...sortOptions, ...options }
     }
 
     let limit = 12
@@ -155,7 +156,7 @@ router.get('/accounts', auth.optional, async (req, res, next) => {
     let accounts = await User.find(query, options)
       .limit(Number(limit))
       .skip(Number(offset))
-      .sort(options)
+      .sort(sortOptions)
 
     return res.json({
       data: accounts.map(function (account) {
