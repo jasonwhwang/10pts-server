@@ -31,7 +31,7 @@ router.post('/comment', auth.required, async (req, res, next) => {
     return res.json({
       comments: review.comments.map(comment => {
         return {
-          ...comment,
+          ...comment.toObject(),
           isLiked: user.isLikedComment(comment._id)
         }
       })
@@ -66,7 +66,7 @@ router.delete('/comment/:commentId', auth.required, async (req, res, next) => {
     return res.json({
       comments: review.comments.map(comment => {
         return {
-          ...comment,
+          ...comment.toObject(),
           isLiked: user.isLikedComment(comment._id)
         }
       })
@@ -86,6 +86,7 @@ router.put('/comment/like/:commentId', auth.required, async (req, res, next) => 
       Comment.findById(req.params.commentId, 'likesCount')
     ])
     if (!user || !comment) return res.sendStatus(401)
+    if(user._id.toString() === comment.account.toString()) return res.sendStatus(422)
     await user.likeComment(comment)
     return res.json({ isLiked: user.isLikedComment(comment._id), likesCount: comment.likesCount })
 

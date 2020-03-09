@@ -33,17 +33,17 @@ ReviewSchema.index({ account: 1, foodname: 1 }, { unique: true })
 
 ReviewSchema.methods.getReview = function(authUser) {
   return {
-    ...this,
+    ...this.toObject(),
     isLiked: authUser ? authUser.isLiked(this._id) : false,
     isSaved: authUser ? authUser.isSaved(this.food._id) : false,
     isFlagged: authUser ? authUser.isFlaggedReview(this._id) : false,
     account: {
-      ...this.account,
+      ...this.account.toObject(),
       isFollowing: authUser ? authUser.isFollowing(this.account._id) : false
     },
     comments: this.comments.map(comment => {
       return {
-        ...comment,
+        ...comment.toObject(),
         isLiked: authUser.isLikedComment(comment._id)
       }
     })
@@ -52,11 +52,11 @@ ReviewSchema.methods.getReview = function(authUser) {
 
 ReviewSchema.methods.getReviewBasic = function(authUser) {
   return {
-    ...this,
+    ...this.toObject(),
     isLiked: authUser ? authUser.isLiked(this._id) : false,
     isSaved: authUser ? authUser.isSaved(this.food._id) : false,
     account: {
-      ...this.account,
+      ...this.account.toObject(),
       isFollowing: authUser ? authUser.isFollowing(this.account._id) : false
     }
   }

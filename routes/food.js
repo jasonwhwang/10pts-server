@@ -29,8 +29,15 @@ router.get('/food', auth.optional, async (req, res, next) => {
   try {
     let q = req.query, query = {}, options = {}
     if (q.keywords) {
-      query = { $text: { $search: q.keywords } }
+      // query = { $text: { $search: q.keywords } }
       options = { score: { $meta: "textScore" } }
+      query = {
+        $or: [
+          { foodTitle: { $regex: q.keywords, $options: "i" } },
+          { address: { $regex: q.keywords, $options: "i" } },
+          { $text: { $search: q.keywords } }
+        ]
+      }
     }
 
     let tags = q.tags

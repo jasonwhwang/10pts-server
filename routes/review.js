@@ -14,7 +14,7 @@ router.get('/review/:foodname/:username', auth.optional, async (req, res, next) 
       User.findOne({ username: req.params.username })
     ])
     if (!account) return res.sendStatus(401)
-    
+
     let review = await Review.findOne({ account: account._id, foodname: req.params.foodname })
       .populate('account', 'username image')
       .populate('tags', 'name')
@@ -159,10 +159,16 @@ router.delete('/review/:reviewId', auth.required, async (req, res, next) => {
 // GET - All Current Reviews
 router.get('/reviews', auth.optional, async (req, res, next) => {
   try {
-    let query = {}, options = {}
+    let query = {}, options = {}, sortOptions = {}
     if (req.query.keywords) {
       query = { $text: { $search: req.query.keywords } }
       options = { score: { $meta: "textScore" } }
+      sortOptions = { score: { $meta: "textScore" } }
+    }
+    if (req.query.date) {
+      let createdAt = { createdAt: { $lte: new Date(parseInt(req.query.date)) } }
+      query = {...query, ...createdAt}
+      sortOptions.createdAt = -1
     }
 
     let limit = 12
@@ -172,10 +178,10 @@ router.get('/reviews', auth.optional, async (req, res, next) => {
     let reviews = await Review.find(query, options)
       .limit(Number(limit))
       .skip(Number(offset))
-      .sort(options)
+      .sort(sortOptions)
 
     return res.json({
-      reviews: reviews.map(function (review) {
+      data: reviews.map(function (review) {
         return review.getReviewBasic(user)
       })
     })
@@ -195,7 +201,9 @@ router.put('/review/like/:reviewId', auth.required, async (req, res, next) => {
       Review.findById(req.params.reviewId)
     ])
     if (!user || !review) return res.sendStatus(401)
+    if (user._id.toString() === review.account.toString()) return res.sendStatus(422)
     await user.like(review)
+    await Notification.create('like', review._id, user._id, review.account)
     return res.json({ isLiked: user.isLiked(review._id), likesCount: review.likesCount })
 
   } catch (err) {

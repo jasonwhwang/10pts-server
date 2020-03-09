@@ -13,7 +13,7 @@ router.get('/account/reviews/:username', auth.optional, async (req, res, next) =
       req.params.username ? User.findOne({ username: req.params.username }) : Promise.resolve()
     ])
     if (!account) return res.sendStatus(404)
-    
+
     let reviews = await Review.find({ account: account._id }, '-tags -comments')
       .populate('account', 'username image')
 
@@ -98,7 +98,7 @@ router.get('/account/followers/:username', auth.optional, async (req, res, next)
       account: account.getUser(user),
       data: account.followers.map(account => {
         return {
-          ...account,
+          ...account.toObject(),
           isFollowing: user.isFollowing(account._id)
         }
       })
@@ -126,7 +126,7 @@ router.get('/account/following/:username', auth.optional, async (req, res, next)
       account: account.getUser(user),
       data: account.following.map(account => {
         return {
-          ...account,
+          ...account.toObject(),
           isFollowing: user.isFollowing(account._id)
         }
       })
@@ -144,8 +144,15 @@ router.get('/accounts', auth.optional, async (req, res, next) => {
   try {
     let query = {}, options = {}, sortOptions = { reviewsCount: -1, followersCount: -1 }
     if (req.query.keywords) {
-      query = { $text: { $search: req.query.keywords } }
+      // query = { $text: { $search: req.query.keywords } }
       options = { score: { $meta: "textScore" } }
+      query = {
+        $or: [
+          { name: { $regex: req.query.keywords, $options: "i" } },
+          { username: { $regex: req.query.keywords, $options: "i" } },
+          { $text: { $search: req.query.keywords } }
+        ]
+      }
       sortOptions = { ...sortOptions, ...options }
     }
 
@@ -178,6 +185,7 @@ router.put('/account/follow/:username', auth.required, async (req, res, next) =>
       User.findOne({ sub: req.user.sub }),
       User.findOne({ username: req.params.username })
     ])
+    if(user._id.toString() === account._id.toString()) return res.sendStatus(422)
     await user.follow(account)
     await Notification.create('follow', null, user._id, account._id)
     return res.json({ isFollowing: user.isFollowing(account._id), followersCount: account.followersCount })

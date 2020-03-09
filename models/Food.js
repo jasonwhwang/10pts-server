@@ -33,7 +33,7 @@ FoodSchema.methods.getFood = function (authUser) {
   })
 
   return {
-    ...this,
+    ...this.toObject(),
     isSaved: authUser.isSaved(this._id),
     isReviewed: hasReviewed,
     reviewsCount: this.reviews.length
