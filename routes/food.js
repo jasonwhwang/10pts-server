@@ -57,6 +57,7 @@ router.get('/food', auth.optional, async (req, res, next) => {
 
     let limit = 12
     let offset = 0
+    if (typeof q.limit !== 'undefined') limit = q.limit
     if (typeof q.offset !== 'undefined') offset = q.offset
     let user = req.user ? await User.findOne({ sub: req.user.sub }) : null
     let allFood = await Food.find(query, options)

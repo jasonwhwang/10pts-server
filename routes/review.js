@@ -173,6 +173,7 @@ router.get('/reviews', auth.optional, async (req, res, next) => {
 
     let limit = 12
     let offset = 0
+    if (typeof req.query.limit !== 'undefined') limit = req.query.limit
     if (typeof req.query.offset !== 'undefined') offset = req.query.offset
     let user = req.user ? await User.findOne({ sub: req.user.sub }) : null
     let reviews = await Review.find(query, options)
