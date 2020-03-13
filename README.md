@@ -100,6 +100,10 @@ Get the food by foodname
 `GET /food`
 Returns list of food matching specified query. Query based on following: keywords, min/max pts, min/max price, tags
 
+### Get Food Suggestions
+`GET /food/suggestions`
+Returns list of food at a restaurant. Query based on following: address
+
 ### Put Save Food
 `PUT /food/save/:foodname`
 Save food to user saved

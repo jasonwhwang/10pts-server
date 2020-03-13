@@ -13,6 +13,7 @@ router.get('/food/:foodname', auth.optional, async (req, res, next) => {
         .populate('account', 'username image')
         .populate('tags', 'name')
         .populate('comments')
+        .populate('reviews', 'account pts')
     ])
     if (!user || !food) return res.sendStatus(401)
     return res.json({ food: food.getFood(user) })
@@ -61,6 +62,8 @@ router.get('/food', auth.optional, async (req, res, next) => {
     if (typeof q.offset !== 'undefined') offset = q.offset
     let user = req.user ? await User.findOne({ sub: req.user.sub }) : null
     let allFood = await Food.find(query, options)
+      .populate('account', 'username image')
+      .populate('reviews', 'account pts')
       .limit(Number(limit))
       .skip(Number(offset))
       .sort(options)
@@ -77,6 +80,22 @@ router.get('/food', auth.optional, async (req, res, next) => {
   }
 })
 
+// GET - All Current Food
+router.get('/food/suggestions', auth.optional, async (req, res, next) => {
+  try {
+    if (!req.query.address) return res.sendStatus(404)
+    let allFood = await Food.find({ address: req.query.address }, 'foodTitle')
+    return res.json({
+      data: allFood.map(function (food) {
+        return food.foodTitle
+      })
+    })
+
+  } catch (err) {
+    console.log(err)
+    next(err)
+  }
+})
 
 // Save
 router.put('/food/save/:foodname', auth.required, async (req, res, next) => {

@@ -11,10 +11,10 @@ var ReviewSchema = new mongoose.Schema({
   address: { type: String, required: true, index: true },
 
   account: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true, required: true },
-  tags: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Tag', index: true }],
-  photos: [String],
-  price: { type: Number, default: 0 },
-  review: { type: String, default: '', required: true },
+  tags: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Tag', index: true, required: true }],
+  photos: { type: [String], required: true },
+  price: { type: Number, required: true },
+  review: { type: String, required: true },
 
   pts: { type: Number, required: true },
   ptsTaste: { type: Number, required: true },
@@ -110,25 +110,26 @@ ReviewSchema.methods.setTags = async function (newTags) {
   }
 }
 
-ReviewSchema.methods.setFood = function (foodTitle, address) {
+ReviewSchema.methods.setFood = function (foodTitle, address, account, food) {
   let a = address.split(',')[0]
-  let newId = generate('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', 12)
+  let newId = generate('0123456789abcdefghijklmnopqrstuvwxyz', 12)
   this.foodname = uslug(foodTitle) + '-' + uslug(a) + '-' + newId
-  this.foodTitle = foodTitle
-  this.address = address
-  this.food = null
+  if(foodTitle) this.foodTitle = foodTitle
+  if(address) this.address = address
+  if(account) this.account = account
+  if(food) this.food = food
 }
 
 ReviewSchema.methods.setDetails = function (r) {
-  this.photos = r.photos
-  this.price = r.price
-  this.review = r.review
-  this.pts = r.pts
-  this.ptsTaste = r.ptsTaste
-  this.ptsAppearance = r.ptsAppearance
-  this.ptsTexture = r.ptsTexture
-  this.ptsAroma = r.ptsAroma
-  this.ptsBalance = r.ptsBalance
+  if(r.photos) this.photos = r.photos
+  if(r.price) this.price = r.price
+  if(r.review) this.review = r.review
+  if(r.pts) this.pts = r.pts
+  if(r.ptsTaste) this.ptsTaste = r.ptsTaste
+  if(r.ptsAppearance) this.ptsAppearance = r.ptsAppearance
+  if(r.ptsTexture) this.ptsTexture = r.ptsTexture
+  if(r.ptsAroma) this.ptsAroma = r.ptsAroma
+  if(r.ptsBalance) this.ptsBalance = r.ptsBalance
 }
 
 ReviewSchema.methods.getDetails = function (r) {

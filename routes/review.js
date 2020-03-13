@@ -38,32 +38,28 @@ router.post('/review', auth.required, async (req, res, next) => {
     let review = await Review.findOne({ account: user._id, foodTitle: r.foodTitle, address: r.address })
       .select('-comments -likesCount -flaggedCount')
     if (review || r._id) throw new Error('Review already exists.')
-    if (!r.foodTitle || !r.address || !r.photos || !r.tags
-      || !r.review || !r.price || !r.pts) throw new Error('Missing values.')
 
-    review = new Review()
-    review.setFood(r.foodTitle, r.address)
-    review.account = user._id
-    review.setDetails(r)
-    await review.setTags(r.tags)
-
-    // Update Food
+    // Get Food
     let food = await Food.findOne({ foodTitle: r.foodTitle, address: r.address })
     if (!food) {
-      let food = new Food()
+      food = new Food()
       food.setFood(r.foodTitle, r.address)
     }
+    // Create Review
+    review = new Review()
+    review.setFood(r.foodTitle, r.address, user._id, food._id)
+    review.setDetails(r)
+    await review.save()
+    await review.setTags(r.tags)
+    // Update Food
     food.setDetails(review, null)
-
-    // save both review and food
-    review.food = food._id
     await Promise.all([review.save(), food.save()])
 
     res.json({ review: review.getReview(user) })
 
     // Create notifications
-    user.followers.forEach(async followerId => {
-      await Notification.create('review', review._id, user._id, followerId)
+    user.followers.forEach(followerId => {
+      Notification.create('review', review._id, user._id, followerId)
     })
 
     return
@@ -86,34 +82,37 @@ router.put('/review/:reviewId', auth.required, async (req, res, next) => {
     let review = await Review.findById(req.params.reviewId)
       .select('-comments -likesCount -flaggedCount')
     if (!review) return res.sendStatus(404)
-    if (!r.foodTitle || !r.address || !r.photos || !r.tags
-      || !r.review || !r.price || !r.pts) throw new Error('Missing values.')
-
-    let oldReview = review.getDetails()
-    review.setDetails(r)
-    await review.setTags(r.tags)
 
     // Update Food
+    let oldReview = review.getDetails()
     let food = await Food.findById(review.food)
-    if (food.foodTitle === r.foodTitle && food.address === r.address) {
-      await food.setDetails(review, oldReview)
-    } else {
-      // remove review from old food
-      food.removeReview(review)
-      if (food.reviews.length <= 0) await Food.findByIdAndDelete(food._id)
-      else await food.save()
+    if (food) {
+      if (food.foodTitle === r.foodTitle && food.address === r.address) {
+        await food.setDetails(review, oldReview)
+      } else {
+        // remove review from old food
+        food.removeReview(review)
+        if (food.reviews.length <= 0) await Food.findByIdAndDelete(food._id)
+        else await food.save()
 
-      // find food using foodTitle and address
-      food = await Food.findOne({ foodTitle: r.foodTitle, address: r.address })
-      // if found, add review to found food
-      if (food) food.setDetails(review, null)
+        // find food using foodTitle and address
+        food = await Food.findOne({ foodTitle: r.foodTitle, address: r.address })
+        // if found, add review to found food
+        if (food) {
+          food.setDetails(review, null)
+          review.setFood(r.foodTitle, r.address, user._id, food._id)
+        }
+      }
     }
-
     if (!food) {
-      let food = new Food()
+      food = new Food()
       food.setFood(r.foodTitle, r.address)
       food.setDetails(review, null)
+      review.setFood(r.foodTitle, r.address, user._id, food._id)
     }
+
+    review.setDetails(r)
+    await review.setTags(r.tags)
 
     // save both review and food
     await Promise.all([review.save(), food.save()])
@@ -167,7 +166,7 @@ router.get('/reviews', auth.optional, async (req, res, next) => {
     }
     if (req.query.date) {
       let createdAt = { createdAt: { $lte: new Date(parseInt(req.query.date)) } }
-      query = {...query, ...createdAt}
+      query = { ...query, ...createdAt }
       sortOptions.createdAt = -1
     }
 
@@ -177,6 +176,7 @@ router.get('/reviews', auth.optional, async (req, res, next) => {
     if (typeof req.query.offset !== 'undefined') offset = req.query.offset
     let user = req.user ? await User.findOne({ sub: req.user.sub }) : null
     let reviews = await Review.find(query, options)
+      .populate('account', 'username image')
       .limit(Number(limit))
       .skip(Number(offset))
       .sort(sortOptions)

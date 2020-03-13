@@ -20,29 +20,30 @@ var FoodSchema = new mongoose.Schema({
   ptsBalance: { type: Number, default: 0, required: true },
 
   savedCount: { type: Number, default: 0 },
-  reviews: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Review' }],
-  accounts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
+  reviews: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Review' }]
 }, { timestamps: true })
 
 FoodSchema.index({ foodTitle: 'text', address: 'text' })
 FoodSchema.index({ foodTitle: 1, address: 1 }, { unique: true })
 
 FoodSchema.methods.getFood = function (authUser) {
-  let hasReviewed = this.accounts.some(function (accountId) {
-    return accountId.toString() === authUser._id.toString()
+  let isReviewed = -1
+  
+  this.reviews.forEach(function (review) {
+    if(review.account.toString() === authUser._id.toString()) isReviewed = review.pts
   })
 
   return {
     ...this.toObject(),
     isSaved: authUser.isSaved(this._id),
-    isReviewed: hasReviewed,
+    isReviewed: isReviewed,
     reviewsCount: this.reviews.length
   }
 }
 
 FoodSchema.methods.setFood = function (foodTitle, address) {
   let a = address.split(',')[0]
-  let newId = generate('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', 12)
+  let newId = generate('0123456789abcdefghijklmnopqrstuvwxyz', 12)
   this.foodname = uslug(foodTitle) + '-' + uslug(a) + '-' + newId
   this.foodTitle = foodTitle
   this.address = address
@@ -71,7 +72,6 @@ FoodSchema.methods.setDetails = function (newReview, oldReview) {
     this.ptsBalance = updateAverage(this.ptsBalance, this.reviews.length, oldReview.ptsBalance, newReview.ptsBalance)
   } else {
     this.reviews.push(newReview._id)
-    this.accounts.push(newReview.account)
     this.price = addToAverage(this.price, this.reviews.length, newReview.price)
     this.pts = addToAverage(this.pts, this.reviews.length, newReview.pts)
     this.ptsTaste = addToAverage(this.ptsTaste, this.reviews.length, newReview.ptsTaste)
@@ -121,7 +121,6 @@ FoodSchema.methods.removeReview = function (review) {
   }
 
   this.reviews.remove(review._id)
-  this.accounts.remove(review.account._id)
 }
 
 mongoose.model('Food', FoodSchema)
