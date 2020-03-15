@@ -32,12 +32,12 @@ router.get('/review/:foodname/:username', auth.optional, async (req, res, next) 
 router.post('/review', auth.required, async (req, res, next) => {
   try {
     let user = await User.findOne({ sub: req.user.sub })
-    if (!user || !req.body.review) return res.sendStatus(401)
-
     let r = req.body.review
+    if (!user || !r) return res.sendStatus(401)
+
     let review = await Review.findOne({ account: user._id, foodTitle: r.foodTitle, address: r.address })
       .select('-comments -likesCount -flaggedCount')
-    if (review || r._id) throw new Error('Review already exists.')
+    if (review || r._id) return res.sendStatus(401)
 
     // Get Food
     let food = await Food.findOne({ foodTitle: r.foodTitle, address: r.address })
@@ -75,10 +75,9 @@ router.post('/review', auth.required, async (req, res, next) => {
 router.put('/review/:reviewId', auth.required, async (req, res, next) => {
   try {
     let user = await User.findOne({ sub: req.user.sub })
-    if (!user || !req.body.review
-      || req.body.review._id !== req.params.reviewId) return res.sendStatus(401)
-
     let r = req.body.review
+    if (!user || !r || r._id !== req.params.reviewId) return res.sendStatus(401)
+
     let review = await Review.findById(req.params.reviewId)
       .select('-comments -likesCount -flaggedCount')
     if (!review) return res.sendStatus(404)

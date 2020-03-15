@@ -62,7 +62,7 @@ UserSchema.methods.unsaveFood = async function (food) {
     await Promise.all([this.save(), food.save()])
   }
 }
-UserSchema.methods.isSavedFood = function (id) {
+UserSchema.methods.isSaved = function (id) {
   return this.saved.some(function (savedId) {
     return savedId.toString() === id.toString()
   })

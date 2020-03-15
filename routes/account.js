@@ -89,7 +89,7 @@ router.get('/account/followers/:username', auth.optional, async (req, res, next)
     let [user, account] = await Promise.all([
       req.user ? User.findOne({ sub: req.user.sub }) : Promise.resolve(),
       req.params.username ? User.findOne({ username: req.params.username })
-        .populate('followers', 'username image followersCount')
+        .populate('followers', 'username image reviewsCount followersCount', null, { sort: { reviewsCount: -1, followersCount: -1 } })
         : Promise.resolve()
     ])
     if (!account) return res.sendStatus(404)
@@ -117,7 +117,7 @@ router.get('/account/following/:username', auth.optional, async (req, res, next)
     let [user, account] = await Promise.all([
       req.user ? User.findOne({ sub: req.user.sub }) : Promise.resolve(),
       req.params.username ? User.findOne({ username: req.params.username })
-        .populate('following', 'username image followersCount')
+        .populate('following', 'username image reviewsCount followersCount', null, { sort: { reviewsCount: -1, followersCount: -1 } })
         : Promise.resolve()
     ])
     if (!account) return res.sendStatus(404)
@@ -185,7 +185,7 @@ router.put('/account/follow/:username', auth.required, async (req, res, next) =>
       User.findOne({ sub: req.user.sub }),
       User.findOne({ username: req.params.username })
     ])
-    if(user._id.toString() === account._id.toString()) return res.sendStatus(422)
+    if (user._id.toString() === account._id.toString()) return res.sendStatus(422)
     await user.follow(account)
     await Notification.create('follow', null, user._id, account._id)
     return res.json({ isFollowing: user.isFollowing(account._id), followersCount: account.followersCount })

@@ -6,7 +6,7 @@ const generate = require('nanoid/generate')
 
 var ReviewSchema = new mongoose.Schema({
   food: { type: mongoose.Schema.Types.ObjectId, ref: 'Food', index: true, required: true },
-  foodname: { type: String, lowercase: true, unique: true, required: [true, "can't be blank"], match: [/^[a-zA-Z0-9]+$/, 'is invalid'], index: true },
+  foodname: { type: String, lowercase: true, unique: true, required: [true, "can't be blank"], match: [/[a-z0-9\-]+$/, 'is invalid'], index: true },
   foodTitle: { type: String, required: true, index: true },
   address: { type: String, required: true, index: true },
 

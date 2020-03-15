@@ -81,7 +81,7 @@ router.get('/food', auth.optional, async (req, res, next) => {
 })
 
 // GET - All Current Food
-router.get('/food/suggestions', auth.optional, async (req, res, next) => {
+router.get('/food/suggestions/all', auth.optional, async (req, res, next) => {
   try {
     if (!req.query.address) return res.sendStatus(404)
     let allFood = await Food.find({ address: req.query.address }, 'foodTitle')

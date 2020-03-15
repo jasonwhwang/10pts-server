@@ -3,7 +3,7 @@ const uslug = require('uslug')
 const generate = require('nanoid/generate')
 
 var FoodSchema = new mongoose.Schema({
-  foodname: { type: String, lowercase: true, unique: true, required: [true, "can't be blank"], match: [/^[a-zA-Z0-9]+$/, 'is invalid'], index: true },
+  foodname: { type: String, lowercase: true, unique: true, required: [true, "can't be blank"], match: [/[a-z0-9\-]+$/, 'is invalid'], index: true },
   foodTitle: { type: String, required: true, index: true },
   address: { type: String, required: true, index: true },
 
@@ -95,7 +95,7 @@ FoodSchema.methods.setTags = function (newTags, oldTags) {
     }
   })
   oldTags.forEach(tag => {
-    if (!tag) continue
+    if (!tag) return
     if (tag in this.tagsCount) {
       this.tagsCount.tag = this.tagsCount.tag - 1
     }
