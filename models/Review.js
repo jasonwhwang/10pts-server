@@ -74,6 +74,7 @@ ReviewSchema.methods.setTags = async function (newTags) {
       if (!foundTag) {
         let createTag = new Tag()
         createTag.name = uslug(tagName).replace(/-/g, ' ')
+          .replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase() }).substring(0, 30)
         createTag.count = 1
         await createTag.save()
         returnTags.push(createTag._id)
@@ -122,14 +123,14 @@ ReviewSchema.methods.setFood = function (foodTitle, address, account, food) {
 
 ReviewSchema.methods.setDetails = function (r) {
   if(r.photos) this.photos = r.photos
-  if(r.price) this.price = r.price
+  if(r.price) this.price = parseInt(r.price)
   if(r.review) this.review = r.review
-  if(r.pts) this.pts = r.pts
-  if(r.ptsTaste) this.ptsTaste = r.ptsTaste
-  if(r.ptsAppearance) this.ptsAppearance = r.ptsAppearance
-  if(r.ptsTexture) this.ptsTexture = r.ptsTexture
-  if(r.ptsAroma) this.ptsAroma = r.ptsAroma
-  if(r.ptsBalance) this.ptsBalance = r.ptsBalance
+  if(r.pts) this.pts = parseInt(r.pts)
+  if(r.ptsTaste) this.ptsTaste = parseInt(r.ptsTaste)
+  if(r.ptsAppearance) this.ptsAppearance = parseInt(r.ptsAppearance)
+  if(r.ptsTexture) this.ptsTexture = parseInt(r.ptsTexture)
+  if(r.ptsAroma) this.ptsAroma = parseInt(r.ptsAroma)
+  if(r.ptsBalance) this.ptsBalance = parseInt(r.ptsBalance)
 }
 
 ReviewSchema.methods.getDetails = function (r) {

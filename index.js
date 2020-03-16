@@ -20,7 +20,6 @@ app.use(express.json())
 
 require('./models')
 app.use('/api', require('./routes'))
-app.get('/', (req, res) => { res.send('10pts API') })
 
 app.use(function (req, res, next) {
   var err = new Error('Not Found')

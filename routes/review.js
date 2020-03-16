@@ -37,7 +37,7 @@ router.post('/review', auth.required, async (req, res, next) => {
 
     let review = await Review.findOne({ account: user._id, foodTitle: r.foodTitle, address: r.address })
       .select('-comments -likesCount -flaggedCount')
-    if (review || r._id) return res.sendStatus(401)
+    if (review || r._id) return res.status(403).send({ error: 'Review already exists.' })
 
     // Get Food
     let food = await Food.findOne({ foodTitle: r.foodTitle, address: r.address })
@@ -53,7 +53,9 @@ router.post('/review', auth.required, async (req, res, next) => {
     await review.setTags(r.tags)
     // Update Food
     food.setDetails(review, null)
-    await Promise.all([review.save(), food.save()])
+    // Update User reviews count
+    user.reviewsCount = user.reviewsCount + 1
+    await Promise.all([review.save(), food.save(), user.save()])
 
     res.json({ review: review.getReview(user) })
 
@@ -143,6 +145,10 @@ router.delete('/review/:reviewId', auth.required, async (req, res, next) => {
       if (food.reviews.length <= 0) await Food.findByIdAndDelete(food._id)
       else await food.save()
     }
+
+    // Update User reviews count
+    user.reviewsCount = user.reviewsCount - 1
+    await user.save()
 
     await Review.findByIdAndDelete(review._id)
     return res.json({ review: {} })
