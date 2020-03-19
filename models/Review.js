@@ -74,7 +74,6 @@ ReviewSchema.methods.setTags = async function (newTags) {
       if (!foundTag) {
         let createTag = new Tag()
         createTag.name = uslug(tagName).replace(/-/g, ' ')
-          .replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase() }).substring(0, 30)
         createTag.count = 1
         await createTag.save()
         returnTags.push(createTag._id)

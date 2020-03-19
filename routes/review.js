@@ -10,7 +10,7 @@ const Notification = require('./notification')
 router.get('/review/:foodname/:username', auth.optional, async (req, res, next) => {
   try {
     let [user, account] = await Promise.all([
-      User.findOne({ sub: req.user.sub }),
+      req.user ? User.findOne({ sub: req.user.sub }) : Promise.resolve(),
       User.findOne({ username: req.params.username })
     ])
     if (!account) return res.sendStatus(401)
