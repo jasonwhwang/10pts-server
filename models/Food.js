@@ -28,14 +28,19 @@ FoodSchema.index({ foodTitle: 1, address: 1 }, { unique: true })
 
 FoodSchema.methods.getFood = function (authUser) {
   let isReviewed = -1
-  
-  this.reviews.forEach(function (review) {
-    if(review.account.toString() === authUser._id.toString()) isReviewed = review.pts
-  })
+
+  if (authUser) {
+    this.reviews.forEach(function (review) {
+      if (review.account.toString() === authUser._id.toString()) isReviewed = review.pts
+    })
+  }
+
+  let photos = Object.values(this.photos).flat()
 
   return {
     ...this.toObject(),
-    isSaved: authUser.isSaved(this._id),
+    photos: photos,
+    isSaved: authUser ? authUser.isSaved(this._id) : false,
     isReviewed: isReviewed,
     reviewsCount: this.reviews.length
   }
@@ -56,7 +61,10 @@ let removeFromAverage = (average, size, val) => { return (size * average - val) 
 FoodSchema.methods.setDetails = function (newReview, oldReview) {
   let oldTags = oldReview ? oldReview.tags : []
   this.setTags(newReview.tags, oldTags)
-  this.photos[newReview.account] = newReview.photos
+
+  let accountTxt = newReview.account
+  if (!this.photos) this.photos = {}
+  this.photos[accountTxt] = newReview.photos
 
   let hasReview = this.reviews.some(function (reviewId) {
     return reviewId.toString() === newReview._id.toString()
@@ -83,6 +91,8 @@ FoodSchema.methods.setDetails = function (newReview, oldReview) {
 }
 
 FoodSchema.methods.setTags = function (newTags, oldTags) {
+  if (!this.tagsCount) this.tagsCount = {}
+
   newTags.forEach(tag => {
     if (tag in this.tagsCount) {
       if (tag in oldTags) {

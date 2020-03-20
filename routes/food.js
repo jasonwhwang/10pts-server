@@ -43,9 +43,11 @@ router.get('/food', auth.optional, async (req, res, next) => {
 
     // https://stackoverflow.com/a/60534727/9857121
     // Convert tags array to ObjectId array
-    let tags = q.tags.split('-')
-    tags = tags.map(tag => { return mongoose.Types.ObjectId(tag) })
-    query.tags = { $all: tags }
+    if (q.tags) {
+      let tags = q.tags.split('-')
+      tags = tags.map(tag => { return mongoose.Types.ObjectId(tag) })
+      query.tags = { $all: tags }
+    }
 
     let minPts = {}, maxPts = {}, minPrice = {}, maxPrice = {}
     if (q.minPts) minPts = { $gte: q.minPts }

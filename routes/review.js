@@ -57,7 +57,7 @@ router.post('/review', auth.required, async (req, res, next) => {
     user.reviewsCount = user.reviewsCount + 1
     await Promise.all([review.save(), food.save(), user.save()])
 
-    res.json({ review: review.getReview(user) })
+    res.json({ review: { foodname: review.foodname } })
 
     // Create notifications
     user.followers.forEach(followerId => {
@@ -80,8 +80,7 @@ router.put('/review/:reviewId', auth.required, async (req, res, next) => {
     let r = req.body.review
     if (!user || !r || r._id !== req.params.reviewId) return res.sendStatus(401)
 
-    let review = await Review.findById(req.params.reviewId)
-      .select('-comments -likesCount -flaggedCount')
+    let review = await Review.findById(req.params.reviewId, '-comments -likesCount -flaggedCount')
     if (!review) return res.sendStatus(404)
 
     // Update Food
@@ -117,7 +116,7 @@ router.put('/review/:reviewId', auth.required, async (req, res, next) => {
 
     // save both review and food
     await Promise.all([review.save(), food.save()])
-    return res.json({ review: review.getReview(user) })
+    return res.json({ review: { foodname: review.foodname } })
 
   } catch (err) {
     console.log(err)
