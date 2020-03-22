@@ -129,8 +129,7 @@ router.put('/review/:reviewId', auth.required, async (req, res, next) => {
 router.delete('/review/:reviewId', auth.required, async (req, res, next) => {
   try {
     let user = await User.findOne({ sub: req.user.sub })
-    if (!user || !req.body.review
-      || req.body.review._id !== req.params.reviewId) return res.sendStatus(401)
+    if (!user || !req.params.reviewId) return res.sendStatus(401)
 
     let review = await Review.findById(req.params.reviewId)
     if (!review) return res.sendStatus(404)
@@ -198,7 +197,7 @@ router.get('/reviews', auth.optional, async (req, res, next) => {
 })
 
 
-// Like
+// PUT - Like Review
 router.put('/review/like/:reviewId', auth.required, async (req, res, next) => {
   try {
     let [user, review] = await Promise.all([
@@ -217,7 +216,7 @@ router.put('/review/like/:reviewId', auth.required, async (req, res, next) => {
   }
 })
 
-// Unlike
+// PUT - Unlike Review
 router.put('/review/unlike/:reviewId', auth.required, async (req, res, next) => {
   try {
     let [user, review] = await Promise.all([
@@ -227,6 +226,42 @@ router.put('/review/unlike/:reviewId', auth.required, async (req, res, next) => 
     if (!user || !review) return res.sendStatus(401)
     await user.unlike(review)
     return res.json({ isLiked: user.isLiked(review._id), likesCount: review.likesCount })
+
+  } catch (err) {
+    console.log(err)
+    next(err)
+  }
+})
+
+// PUT - Flag Review
+router.put('/review/flag/:reviewId', auth.required, async (req, res, next) => {
+  try {
+    let [user, review] = await Promise.all([
+      User.findOne({ sub: req.user.sub }),
+      Review.findById(req.params.reviewId)
+    ])
+    if (!user || !review) return res.sendStatus(401)
+    if (user._id.toString() === review.account.toString()) return res.sendStatus(422)
+    await user.flagReview(review)
+    return res.json({ isFlagged: user.isFlaggedReview(review._id) })
+
+  } catch (err) {
+    console.log(err)
+    next(err)
+  }
+})
+
+// PUT - Unflag Review
+router.put('/review/unflag/:reviewId', auth.required, async (req, res, next) => {
+  try {
+    let [user, review] = await Promise.all([
+      User.findOne({ sub: req.user.sub }),
+      Review.findById(req.params.reviewId)
+    ])
+    if (!user || !review) return res.sendStatus(401)
+    if (user._id.toString() === review.account.toString()) return res.sendStatus(422)
+    await user.unflagReview(review)
+    return res.json({ isFlagged: user.isFlaggedReview(review._id) })
 
   } catch (err) {
     console.log(err)

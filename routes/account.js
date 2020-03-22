@@ -212,4 +212,38 @@ router.put('/account/unfollow/:username', auth.required, async (req, res, next) 
   }
 })
 
+// PUT - Flag Account
+router.put('/account/flag/:username', auth.required, async (req, res, next) => {
+  try {
+    let [user, account] = await Promise.all([
+      User.findOne({ sub: req.user.sub }),
+      User.findOne({ username: req.params.username })
+    ])
+    if (user._id.toString() === account._id.toString()) return res.sendStatus(422)
+    await user.flagUser(account)
+    return res.json({ isFlagged: user.isFlaggedUser(account._id) })
+
+  } catch (err) {
+    console.log(err)
+    next(err)
+  }
+})
+
+// PUT - Flag Account
+router.put('/account/unflag/:username', auth.required, async (req, res, next) => {
+  try {
+    let [user, account] = await Promise.all([
+      User.findOne({ sub: req.user.sub }),
+      User.findOne({ username: req.params.username })
+    ])
+    if (user._id.toString() === account._id.toString()) return res.sendStatus(422)
+    await user.unflagUser(account)
+    return res.json({ isFlagged: user.isFlaggedUser(account._id) })
+
+  } catch (err) {
+    console.log(err)
+    next(err)
+  }
+})
+
 module.exports = router

@@ -53,9 +53,17 @@ Returns list of accounts matching specified query. Query based on following: key
 `PUT /account/follow/:username`
 Authenticated User follows account
 
-### Put Unollow
+### Put Unfollow
 `PUT /account/unfollow/:username`
 Authenticated User unfollows account
+
+### Put Flag Account
+`PUT /account/flag/:username`
+Authenticated User flags account
+
+### Put Unflag Account
+`PUT /account/unflag/:username`
+Authenticated User unflags account
 
 ## Tag:
 ### Get Tags
@@ -83,6 +91,8 @@ Delete the specified review
 `GET /reviews`
 Get all current reviews, shown on main front page.
 
+<!-- HERE -->
+
 ### Put Like Review
 `PUT /review/like/:reviewId`
 Like the specified review
@@ -90,6 +100,14 @@ Like the specified review
 ### Put Unlike Review
 `PUT /review/unlike/:reviewId`
 Unlike the specified review
+
+### Put Flag Review
+`PUT /review/flag/:reviewId`
+Authenticated User flags review
+
+### Put Unflag Review
+`PUT /review/unflag/:reviewId`
+Authenticated User unflags review
 
 ## Food:
 ### Get Food

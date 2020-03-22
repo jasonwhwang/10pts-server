@@ -79,7 +79,6 @@ FoodSchema.methods.setDetails = function (newReview, oldReview) {
     this.ptsAroma = updateAverage(this.ptsAroma, this.reviews.length, oldReview.ptsAroma, newReview.ptsAroma)
     this.ptsBalance = updateAverage(this.ptsBalance, this.reviews.length, oldReview.ptsBalance, newReview.ptsBalance)
   } else {
-    this.reviews.push(newReview._id)
     this.price = addToAverage(this.price, this.reviews.length, newReview.price)
     this.pts = addToAverage(this.pts, this.reviews.length, newReview.pts)
     this.ptsTaste = addToAverage(this.ptsTaste, this.reviews.length, newReview.ptsTaste)
@@ -87,6 +86,7 @@ FoodSchema.methods.setDetails = function (newReview, oldReview) {
     this.ptsTexture = addToAverage(this.ptsTexture, this.reviews.length, newReview.ptsTexture)
     this.ptsAroma = addToAverage(this.ptsAroma, this.reviews.length, newReview.ptsAroma)
     this.ptsBalance = addToAverage(this.ptsBalance, this.reviews.length, newReview.ptsBalance)
+    this.reviews.push(newReview._id)
   }
 }
 
@@ -118,16 +118,16 @@ FoodSchema.methods.setTags = function (newTags, oldTags) {
 
 FoodSchema.methods.removeReview = function (review) {
   this.setTags([], review.tags)
-  delete this.photos[newReview.account]
+  delete this.photos[review.account]
 
   if (this.reviews.length >= 2) {
-    this.price = removeFromAverage(this.price, this.reviews.length, newReview.price)
-    this.pts = removeFromAverage(this.pts, this.reviews.length, newReview.pts)
-    this.ptsTaste = removeFromAverage(this.ptsTaste, this.reviews.length, newReview.ptsTaste)
-    this.ptsAppearance = removeFromAverage(this.ptsAppearance, this.reviews.length, newReview.ptsAppearance)
-    this.ptsTexture = removeFromAverage(this.ptsTexture, this.reviews.length, newReview.ptsTexture)
-    this.ptsAroma = removeFromAverage(this.ptsAroma, this.reviews.length, newReview.ptsAroma)
-    this.ptsBalance = removeFromAverage(this.ptsBalance, this.reviews.length, newReview.ptsBalance)
+    this.price = removeFromAverage(this.price, this.reviews.length, review.price)
+    this.pts = removeFromAverage(this.pts, this.reviews.length, review.pts)
+    this.ptsTaste = removeFromAverage(this.ptsTaste, this.reviews.length, review.ptsTaste)
+    this.ptsAppearance = removeFromAverage(this.ptsAppearance, this.reviews.length, review.ptsAppearance)
+    this.ptsTexture = removeFromAverage(this.ptsTexture, this.reviews.length, review.ptsTexture)
+    this.ptsAroma = removeFromAverage(this.ptsAroma, this.reviews.length, review.ptsAroma)
+    this.ptsBalance = removeFromAverage(this.ptsBalance, this.reviews.length, review.ptsBalance)
   }
 
   this.reviews.remove(review._id)
