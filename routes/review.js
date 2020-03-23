@@ -19,7 +19,7 @@ router.get('/review/:foodname/:username', auth.optional, async (req, res, next) 
       .populate('account', 'username image')
       .populate('tags', 'name')
       .populate('comments')
-    if (!review) return res.sendStatus(401)
+    if (!review) return res.sendStatus(404)
     return res.json({ review: review.getReview(user) })
 
   } catch (err) {
@@ -47,7 +47,7 @@ router.post('/review', auth.required, async (req, res, next) => {
     }
     // Create Review
     review = new Review()
-    review.setFood(r.foodTitle, r.address, user._id, food._id)
+    review.setFood(food.foodname, r.foodTitle, r.address, user._id, food._id)
     review.setDetails(r)
     await review.save()
     await review.setTags(r.tags)
@@ -83,36 +83,34 @@ router.put('/review/:reviewId', auth.required, async (req, res, next) => {
     let review = await Review.findById(req.params.reviewId, '-comments -likesCount -flaggedCount')
     if (!review) return res.sendStatus(404)
 
-    // Update Food
     let oldReview = review.getDetails()
+    // Get Food
     let food = await Food.findById(review.food)
-    if (food) {
-      if (food.foodTitle === r.foodTitle && food.address === r.address) {
-        await food.setDetails(review, oldReview)
-      } else {
+    if(food) {
+      // if food is different
+      if(food.foodTitle !== r.foodTitle || food.address !== r.address) {
         // remove review from old food
         food.removeReview(review)
         if (food.reviews.length <= 0) await Food.findByIdAndDelete(food._id)
         else await food.save()
-
-        // find food using foodTitle and address
+        // find food using new foodTitle and new address
         food = await Food.findOne({ foodTitle: r.foodTitle, address: r.address })
-        // if found, add review to found food
-        if (food) {
-          food.setDetails(review, null)
-          review.setFood(r.foodTitle, r.address, user._id, food._id)
+        if(food) {
+          review.setFood(food.foodname, r.foodTitle, r.address, user._id, food._id)
+          oldReview = null
         }
       }
     }
     if (!food) {
       food = new Food()
       food.setFood(r.foodTitle, r.address)
-      food.setDetails(review, null)
-      review.setFood(r.foodTitle, r.address, user._id, food._id)
+      review.setFood(food.foodname, r.foodTitle, r.address, user._id, food._id)
     }
-
+    // Update Review
     review.setDetails(r)
     await review.setTags(r.tags)
+    // Update Food
+    food.setDetails(review, oldReview)
 
     // save both review and food
     await Promise.all([review.save(), food.save()])

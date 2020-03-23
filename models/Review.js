@@ -2,7 +2,6 @@ var mongoose = require('mongoose')
 const Tag = mongoose.model('Tag')
 const Comment = mongoose.model('Comment')
 const uslug = require('uslug')
-const generate = require('nanoid/generate')
 
 var ReviewSchema = new mongoose.Schema({
   food: { type: mongoose.Schema.Types.ObjectId, ref: 'Food', index: true, required: true },
@@ -110,10 +109,8 @@ ReviewSchema.methods.setTags = async function (newTags) {
   }
 }
 
-ReviewSchema.methods.setFood = function (foodTitle, address, account, food) {
-  let a = address.split(',')[0]
-  let newId = generate('0123456789abcdefghijklmnopqrstuvwxyz', 12)
-  this.foodname = uslug(foodTitle) + '-' + uslug(a) + '-' + newId
+ReviewSchema.methods.setFood = function (foodname, foodTitle, address, account, food) {
+  if(foodname) this.foodname = foodname
   if(foodTitle) this.foodTitle = foodTitle
   if(address) this.address = address
   if(account) this.account = account

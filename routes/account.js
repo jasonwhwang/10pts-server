@@ -36,17 +36,29 @@ router.get('/account/saved/:username', auth.optional, async (req, res, next) => 
     let [user, account] = await Promise.all([
       req.user ? User.findOne({ sub: req.user.sub }) : Promise.resolve(),
       req.params.username ? User.findOne({ username: req.params.username })
-        .populate('saved', '-tags')
+        .populate({
+          path: 'saved',
+          select: '-tags',
+          populate: {
+            path: 'reviews',
+            select: 'account'
+          }
+        })
         : Promise.resolve()
     ])
     if (!account) return res.sendStatus(404)
+    let oldLength = account.saved.length
+    account.saved = account.saved.filter(food => food !== null)
+    let isUpdated = oldLength > account.saved.length
 
-    return res.json({
+    res.json({
       account: account.getUser(user),
       data: account.saved.map(food => {
         return food.getFood(user)
       })
     })
+    if(isUpdated) account.save()
+    return
 
   } catch (err) {
     console.log(err)
@@ -68,13 +80,18 @@ router.get('/account/likes/:username', auth.optional, async (req, res, next) => 
         : Promise.resolve()
     ])
     if (!account) return res.sendStatus(404)
+    let oldLength = account.likes.length
+    account.likes = account.likes.filter(review => review !== null)
+    let isUpdated = oldLength > account.likes.length
 
-    return res.json({
+    res.json({
       account: account.getUser(user),
       data: account.likes.map(review => {
         return review.getReviewBasic(user)
       })
     })
+    if(isUpdated) account.save()
+    return
 
   } catch (err) {
     console.log(err)

@@ -91,8 +91,6 @@ Delete the specified review
 `GET /reviews`
 Get all current reviews, shown on main front page.
 
-<!-- HERE -->
-
 ### Put Like Review
 `PUT /review/like/:reviewId`
 Like the specified review
@@ -129,6 +127,8 @@ Save food to user saved
 ### Put Unsave Food
 `PUT /food/unsave/:foodname`
 Unsave food from user saved
+
+<!-- HERE -->
 
 ## Comment:
 ### Post Comment

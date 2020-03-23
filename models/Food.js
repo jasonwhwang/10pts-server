@@ -8,8 +8,8 @@ var FoodSchema = new mongoose.Schema({
   address: { type: String, required: true, index: true },
 
   tags: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Tag', index: true }],
-  tagsCount: {},
-  photos: {},
+  tagsCount: { type: mongoose.Schema.Types.Mixed, default: {} },
+  photos: { type: mongoose.Schema.Types.Mixed, default: {} },
   price: { type: Number, default: 0, index: true },
 
   pts: { type: Number, default: 0, required: true, index: true },
@@ -21,7 +21,7 @@ var FoodSchema = new mongoose.Schema({
 
   savedCount: { type: Number, default: 0 },
   reviews: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Review' }]
-}, { timestamps: true })
+}, { timestamps: true, minimize: false })
 
 FoodSchema.index({ foodTitle: 'text', address: 'text' })
 FoodSchema.index({ foodTitle: 1, address: 1 }, { unique: true })
@@ -31,7 +31,7 @@ FoodSchema.methods.getFood = function (authUser) {
 
   if (authUser) {
     this.reviews.forEach(function (review) {
-      if (review.account.toString() === authUser._id.toString()) isReviewed = review.pts
+      if (review.account._id.toString() === authUser._id.toString()) isReviewed = review.pts
     })
   }
 
@@ -63,8 +63,8 @@ FoodSchema.methods.setDetails = function (newReview, oldReview) {
   this.setTags(newReview.tags, oldTags)
 
   let accountTxt = newReview.account
-  if (!this.photos) this.photos = {}
   this.photos[accountTxt] = newReview.photos
+  this.markModified('photos')
 
   let hasReview = this.reviews.some(function (reviewId) {
     return reviewId.toString() === newReview._id.toString()
@@ -91,34 +91,37 @@ FoodSchema.methods.setDetails = function (newReview, oldReview) {
 }
 
 FoodSchema.methods.setTags = function (newTags, oldTags) {
-  if (!this.tagsCount) this.tagsCount = {}
+  let oldTagsStr = oldTags.map(tag => { return tag.toString() })
 
-  newTags.forEach(tag => {
+  newTags.forEach(t => {
+    let tag = t.toString()
+    let idx = oldTagsStr.indexOf(tag)
     if (tag in this.tagsCount) {
-      if (tag in oldTags) {
-        let idx = oldTags.indexOf(tag)
-        oldTags[idx] = null
-      } else this.tagsCount.tag = this.tagsCount.tag + 1
+      if(idx === -1) this.tagsCount[tag] = this.tagsCount[tag] + 1
     } else {
-      this.tagsCount.tag = 1
-      this.tags.push(tag)
+      this.tagsCount[tag] = 1
+      this.tags.push(t)
     }
+    if(idx !== -1) oldTagsStr[idx] = null
   })
-  oldTags.forEach(tag => {
+
+  oldTagsStr.forEach((tag, index) => {
     if (!tag) return
     if (tag in this.tagsCount) {
-      this.tagsCount.tag = this.tagsCount.tag - 1
+      this.tagsCount[tag] = this.tagsCount[tag] - 1
     }
-    if (this.tagsCount.tag <= 0) {
-      delete this.tagsCount.tag
-      this.tags.remove(tag)
+    if (this.tagsCount[tag] <= 0) {
+      delete this.tagsCount[tag]
+      this.tags.remove(oldTags[index])
     }
   })
+  this.markModified('tagsCount')
 }
 
 FoodSchema.methods.removeReview = function (review) {
   this.setTags([], review.tags)
   delete this.photos[review.account]
+  this.markModified('photos')
 
   if (this.reviews.length >= 2) {
     this.price = removeFromAverage(this.price, this.reviews.length, review.price)

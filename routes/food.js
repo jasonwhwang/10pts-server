@@ -13,7 +13,14 @@ router.get('/food/:foodname', auth.optional, async (req, res, next) => {
         .populate('account', 'username image')
         .populate('tags', 'name')
         .populate('comments')
-        .populate('reviews', 'account pts')
+        .populate({
+          path: 'reviews',
+          select: 'account pts likesCount',
+          populate: {
+            path: 'account',
+            select: 'username image'
+          }
+        })
     ])
     if (!user || !food) return res.sendStatus(401)
     return res.json({ food: food.getFood(user) })
@@ -64,7 +71,14 @@ router.get('/food', auth.optional, async (req, res, next) => {
     let user = req.user ? await User.findOne({ sub: req.user.sub }) : null
     let allFood = await Food.find(query, options)
       .populate('account', 'username image')
-      .populate('reviews', 'account pts')
+      .populate({
+        path: 'reviews',
+        select: 'account pts likesCount',
+        populate: {
+          path: 'account',
+          select: '_id'
+        }
+      })
       .limit(Number(limit))
       .skip(Number(offset))
       .sort(options)
