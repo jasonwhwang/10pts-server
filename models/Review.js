@@ -5,7 +5,7 @@ const uslug = require('uslug')
 
 var ReviewSchema = new mongoose.Schema({
   food: { type: mongoose.Schema.Types.ObjectId, ref: 'Food', index: true, required: true },
-  foodname: { type: String, lowercase: true, unique: true, required: [true, "can't be blank"], match: [/[a-z0-9\-]+$/, 'is invalid'], index: true },
+  foodname: { type: String, lowercase: true, required: [true, "can't be blank"], match: [/[a-z0-9\-]+$/, 'is invalid'], index: true },
   foodTitle: { type: String, required: true, index: true },
   address: { type: String, required: true, index: true },
 
@@ -43,7 +43,8 @@ ReviewSchema.methods.getReview = function(authUser) {
     comments: this.comments.map(comment => {
       return {
         ...comment.toObject(),
-        isLiked: authUser.isLikedComment(comment._id)
+        likesCount: comment.likes.length,
+        isLiked: authUser ? comment.isLikedComment(authUser._id) : false
       }
     })
   }

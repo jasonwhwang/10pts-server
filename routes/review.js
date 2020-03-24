@@ -18,7 +18,10 @@ router.get('/review/:foodname/:username', auth.optional, async (req, res, next) 
     let review = await Review.findOne({ account: account._id, foodname: req.params.foodname })
       .populate('account', 'username image')
       .populate('tags', 'name')
-      .populate('comments')
+      .populate({
+        path: 'comments',
+        populate: { path: 'account', select: 'username image' }
+      })
     if (!review) return res.sendStatus(404)
     return res.json({ review: review.getReview(user) })
 
@@ -179,7 +182,7 @@ router.get('/reviews', auth.optional, async (req, res, next) => {
     let reviews = await Review.find(query, options)
       .populate('account', 'username image')
       .limit(Number(limit))
-      .skip(Number(offset))
+      .skip(Number(offset*limit))
       .sort(sortOptions)
 
     return res.json({

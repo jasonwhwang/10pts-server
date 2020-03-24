@@ -14,7 +14,6 @@ var UserSchema = new mongoose.Schema({
 
   saved: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Food' }],
   likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Review' }],
-  likedComments: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Comment' }],
 
   followers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   following: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
@@ -33,6 +32,7 @@ UserSchema.plugin(uniqueValidator, { message: 'is already taken.' })
 // authUser parameter is requester
 UserSchema.methods.getUser = function (authUser) {
   return {
+    _id: this._id,
     username: this.username,
     name: this.name,
     image: this.image,
@@ -84,27 +84,6 @@ UserSchema.methods.unlike = async function (review) {
   }
 }
 UserSchema.methods.isLiked = function (id) {
-  return this.likes.some(function (likeId) {
-    return likeId.toString() === id.toString()
-  })
-}
-
-// Like Comment Functions
-UserSchema.methods.likeComment = async function (comment) {
-  if (this.likedComments.indexOf(comment._id) === -1) {
-    this.likedComments.push(comment._id)
-    comment.likesCount = comment.likesCount + 1
-    await Promise.all([this.save(), comment.save()])
-  }
-}
-UserSchema.methods.unlikeComment = async function (comment) {
-  if (this.likedComments.indexOf(comment._id) !== -1) {
-    this.likedComments.remove(comment._id)
-    comment.likesCount = comment.likesCount - 1
-    await Promise.all([this.save(), comment.save()])
-  }
-}
-UserSchema.methods.isLikedComment = function (id) {
   return this.likes.some(function (likeId) {
     return likeId.toString() === id.toString()
   })

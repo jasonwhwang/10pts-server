@@ -128,11 +128,9 @@ Save food to user saved
 `PUT /food/unsave/:foodname`
 Unsave food from user saved
 
-<!-- HERE -->
-
 ## Comment:
 ### Post Comment
-`POST /comment`
+`POST /comment/:reviewId`
 Post new comment to a review
 
 ### Delete Comment

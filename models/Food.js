@@ -48,7 +48,7 @@ FoodSchema.methods.getFood = function (authUser) {
 
 FoodSchema.methods.setFood = function (foodTitle, address) {
   let a = address.split(',')[0]
-  let newId = generate('0123456789abcdefghijklmnopqrstuvwxyz', 12)
+  let newId = generate('0123456789abcdefghijklmnopqrstuvwxyz', 8)
   this.foodname = uslug(foodTitle) + '-' + uslug(a) + '-' + newId
   this.foodTitle = foodTitle
   this.address = address

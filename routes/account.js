@@ -39,6 +39,7 @@ router.get('/account/saved/:username', auth.optional, async (req, res, next) => 
         .populate({
           path: 'saved',
           select: '-tags',
+          sort: { foodTitle: 1 },
           populate: {
             path: 'reviews',
             select: 'account'
@@ -47,9 +48,6 @@ router.get('/account/saved/:username', auth.optional, async (req, res, next) => 
         : Promise.resolve()
     ])
     if (!account) return res.sendStatus(404)
-    let oldLength = account.saved.length
-    account.saved = account.saved.filter(food => food !== null)
-    let isUpdated = oldLength > account.saved.length
 
     res.json({
       account: account.getUser(user),
@@ -57,7 +55,8 @@ router.get('/account/saved/:username', auth.optional, async (req, res, next) => 
         return food.getFood(user)
       })
     })
-    if(isUpdated) account.save()
+    account.markModified('saved')
+    await account.save()
     return
 
   } catch (err) {
@@ -74,15 +73,12 @@ router.get('/account/likes/:username', auth.optional, async (req, res, next) => 
       req.user ? User.findOne({ sub: req.user.sub }) : Promise.resolve(),
       req.params.username ? User.findOne({ username: req.params.username })
         .populate({
-          path: 'likes', select: '-tags -comments',
+          path: 'likes', select: '-tags -comments', sort: { foodTitle: 1 },
           populate: [{ path: 'account', select: 'username image' }]
         })
         : Promise.resolve()
     ])
     if (!account) return res.sendStatus(404)
-    let oldLength = account.likes.length
-    account.likes = account.likes.filter(review => review !== null)
-    let isUpdated = oldLength > account.likes.length
 
     res.json({
       account: account.getUser(user),
@@ -90,7 +86,8 @@ router.get('/account/likes/:username', auth.optional, async (req, res, next) => 
         return review.getReviewBasic(user)
       })
     })
-    if(isUpdated) account.save()
+    account.markModified('likes')
+    await account.save()
     return
 
   } catch (err) {
@@ -179,7 +176,7 @@ router.get('/accounts', auth.optional, async (req, res, next) => {
     let user = req.user ? await User.findOne({ sub: req.user.sub }) : null
     let accounts = await User.find(query, options)
       .limit(Number(limit))
-      .skip(Number(offset))
+      .skip(Number(offset*limit))
       .sort(sortOptions)
 
     return res.json({

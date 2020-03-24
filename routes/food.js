@@ -8,7 +8,7 @@ const Food = mongoose.model('Food')
 router.get('/food/:foodname', auth.optional, async (req, res, next) => {
   try {
     let [user, food] = await Promise.all([
-      User.findOne({ sub: req.user.sub }),
+      req.user ? User.findOne({ sub: req.user.sub }) : Promise.resolve(),
       Food.findOne({ foodname: req.params.foodname })
         .populate('account', 'username image')
         .populate('tags', 'name')
@@ -22,7 +22,7 @@ router.get('/food/:foodname', auth.optional, async (req, res, next) => {
           }
         })
     ])
-    if (!user || !food) return res.sendStatus(401)
+    if (!food) return res.sendStatus(401)
     return res.json({ food: food.getFood(user) })
 
   } catch (err) {
@@ -48,8 +48,6 @@ router.get('/food', auth.optional, async (req, res, next) => {
       }
     }
 
-    // https://stackoverflow.com/a/60534727/9857121
-    // Convert tags array to ObjectId array
     if (q.tags) {
       let tags = q.tags.split('-')
       tags = tags.map(tag => { return mongoose.Types.ObjectId(tag) })
@@ -80,7 +78,7 @@ router.get('/food', auth.optional, async (req, res, next) => {
         }
       })
       .limit(Number(limit))
-      .skip(Number(offset))
+      .skip(Number(offset*limit))
       .sort(options)
 
     return res.json({
@@ -138,7 +136,7 @@ router.put('/food/unsave/:foodname', auth.required, async (req, res, next) => {
     ])
     if (!user || !food) return res.sendStatus(401)
     await user.unsaveFood(food)
-    return res.json({ isSaved: user.isSavedFood(food._id), savedCount: food.savedCount })
+    return res.json({ isSaved: user.isSaved(food._id), savedCount: food.savedCount })
 
   } catch (err) {
     console.log(err)

@@ -16,7 +16,7 @@ const create = async (type, review, from, to) => {
 
   // Add notifications to account
   account.notifications.unshift(notification._id)
-  if (account.notifications.length > 30) {
+  if (account.notifications.length > 20) {
     let deleteN = account.notifications.pop()
     await Notification.findByIdAndDelete(deleteN)
   }
