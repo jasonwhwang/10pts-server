@@ -16,6 +16,7 @@ router.get('/account/reviews/:username', auth.optional, async (req, res, next) =
 
     let reviews = await Review.find({ account: account._id }, '-tags -comments')
       .populate('account', 'username image')
+      .sort({ createdAt: -1 })
 
     return res.json({
       account: account.getUser(user),
